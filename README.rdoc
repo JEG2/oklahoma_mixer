@@ -1,0 +1,48 @@
+= What is Oklahoma Mixer?
+
+Oklahoma Mixer is a Ruby FFI interface to the C library for Tokyo Cabinet.  It allows you to use the key-value store from Ruby.
+
+= Why not just use rufus-tokyo?
+
+There is already a Ruby FFI interface to Tokyo Cabinet and more called {rufus-tokyo}[http://github.com/jmettraux/rufus-tokyo].  I am a huge fan of rufus-tokyo and have contributed to that project.  I have learned a ton from working with rufus-tokyo and that code was my inspiration for this library.
+
+That said, I did want to change some things that would require big changes in rufus-tokyo.  Here are the things I plan to do differently with Oklahoma Mixer:
+
+* Tokyo Cabinet's B+Tree Database has some neat features, like custom ordering
+  functions, that are hard to expose through rufus-tokyo due to the way it is
+  designed.  I would have had to rewrite pretty much that entire section of the
+  library anyway to add these features.
+* There are some places where rufus-tokyo uses more memory than it absolutely
+  must or slows itself down a bit with extra iterations of the data.  Again,
+  this is a result of how it is designed.  It allows more code reuse at the cost
+  of some efficiency.  I wanted to improve performance in those areas.
+* I'm working on some higher level abstractions for Tokyo Cabinet that I
+  eventually plan to include in this library.  These extra tools are the reason
+  I needed to make these changes and additions.
+* Finally, rufus-tokyo paved the way to a Ruby-like interface for Tokyo Cabinet.
+  Previous choices were scary in comparison.  I wanted to push that movement
+  even further though and get an even more Hash- and File-like interface, where
+  possible.
+
+It's important to note though that rufus-tokyo does do some things better and it always will.  Its advantages are:
+
+* It offers a nice Ruby interface over a raw C extension which is faster than
+  using FFI.  I have no intention of duplicating that interface, so rufus-tokyo
+  will remain the right choice for raw speed when using MRI.
+* For now, rufus-tokyo is more full featured.  It provides interfaces for Tokyo
+  Tyrant and Tokyo Dystopia.  I would like to add these eventually, but I'm
+  starting with just Tokyo Cabinet.
+* It offers a pure Ruby interface for communicating with Tokyo Tyrant without
+  needing the C libraries installed.  I won't be copying that either, so it will
+  remain the right choice for a no dependency install.
+* For now, it's more mature.  A lot of developers have used it and contributed
+  to it.  It's probably the safer library to trust for production applications
+  at this time.
+
+= Why did you call it Oklahoma Mixer?
+
+When I was in Japan, people would ask where I was from.  When I would tell them, "Oklahoma, U.S.A.," they often replied with, "Ah, I know the Oklahoma Mixer."  Some would even dance a little when they said it.
+
+It turns out Oklahoma Mixer is a song in Japan.  I had to track it down in a music store.  It's kind of a camp song medley, including things like the Hokey Pokey.  I'm not too sure what that has to do with Oklahoma, but at least they had heard of where I'm from.
+
+On a more practical side, this interface to Tokyo Cabinet is from Oklahoma.  I intend it to _mix_ together all of the great features of that library in some exciting new ways.  Thus, Oklahoma Mixer it is.
