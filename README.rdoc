@@ -2,7 +2,7 @@
 
 Oklahoma Mixer is a Ruby FFI interface to the C library for Tokyo Cabinet.  It allows you to use the key-value store from Ruby.
 
-= Why not just use rufus-tokyo?
+== Why not just use rufus-tokyo?
 
 There is already a Ruby FFI interface to Tokyo Cabinet and more called {rufus-tokyo}[http://github.com/jmettraux/rufus-tokyo].  I am a huge fan of rufus-tokyo and have contributed to that project.  I have learned a ton from working with rufus-tokyo and that code was my inspiration for this library.
 
@@ -39,7 +39,7 @@ It's important to note though that rufus-tokyo does do some things better and it
   to it.  It's probably the safer library to trust for production applications
   at this time.
 
-= Why did you call it Oklahoma Mixer?
+== Why did you call it Oklahoma Mixer?
 
 When I was in Japan, people would ask where I was from.  When I would tell them, "Oklahoma, U.S.A.," they often replied with, "Ah, I know the Oklahoma Mixer."  Some would even dance a little when they said it.
 
