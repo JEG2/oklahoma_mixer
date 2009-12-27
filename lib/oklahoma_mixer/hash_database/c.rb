@@ -1,47 +1,16 @@
-require "ffi"
+require "oklahoma_mixer/utilities"
 
 module OklahomaMixer
   class HashDatabase
     module C
-      extend FFI::Library
-      begin
-        ffi_lib(
-          *Array(
-            ENV.fetch(
-              "TOKYO_CABINET_LIB",
-              Dir["/{opt,usr}/{,local/}lib{,64}/libtokyocabinet.{dylib,so*}"]
-            )
-          )
-        )
-      rescue LoadError
-        fail "Tokyo Cabinet could not be loaded "           +
-             "(you can install it from http://1978th.net/ " +
-             "and set the TOKYO_CABINET_LIB environment variable to its path)"
-      end
-      
-      def self.prefix(new_prefix = nil)
-        @prefix = new_prefix unless new_prefix.nil?
-        defined?(@prefix) and @prefix
-      end
-      
-      def self.func(details)
-        args =  [ ]
-        args << details.fetch(:alias, details[:name])
-        args << "#{prefix}#{details[:name]}".to_sym
-        args << Array(details[:args])
-        args << details.fetch(:returns, :void)
-        attach_function(*args)
-      end
-      
-      prefix :tc
-      
-      func :name => :free,
-           :args => [:pointer]
+      extend OklahomaMixer::Utilities::FFIDSL
       
       prefix :tchdb
       
       func :name    => :new,
            :returns => :pointer
+      func :name    => :del,
+           :args    => :pointer
       func :name    => :open,
            :args    => [:pointer, :string, :int],
            :returns => :bool
@@ -70,6 +39,16 @@ module OklahomaMixer
       func :name    => :get,
            :args    => [:pointer, :pointer, :int, :pointer],
            :returns => :pointer
+
+      func :name    => :iterinit,
+           :args    => [:pointer],
+           :returns => :bool
+      func :name    => :iternext,
+           :args    => [:pointer, :pointer],
+           :returns => :pointer
+      func :name    => :iternext3,
+           :args    => [:pointer, :pointer, :pointer],
+           :returns => :bool
     end
   end
 end

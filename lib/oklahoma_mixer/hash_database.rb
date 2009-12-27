@@ -1,13 +1,27 @@
 require "oklahoma_mixer/hash_database/c"
+require "oklahoma_mixer/extensible_string"
 
 module OklahomaMixer
   class HashDatabase
+    ###########################
+    ### Opening and Closing ###
+    ###########################
+    
     def initialize(path, options = { })
       @path        = path
       @db          = C.new
       self.default = options[:default]
       C.open(@db, path, (1 << 1) | (1 << 2))
     end
+    
+    def close
+      C.close(@db)
+      C.del(@db)
+    end
+    
+    ################################
+    ### Getting and Setting Keys ###
+    ################################
     
     def default(key = nil)
       @default[key] if @default
@@ -47,24 +61,28 @@ module OklahomaMixer
     alias_method :[]=, :store
     
     def fetch(key, *default)
-      k     = key.to_s
-      size  = FFI::MemoryPointer.new(:int)
-      value = C.get(@db, k, k.size, size)
-      if value.address.zero?
-        if block_given?
-          warn "block supersedes default value argument" unless default.empty?
-          yield key
-        elsif not default.empty?
-          default.first
-        else
-          fail IndexError, "key not found"
+      Utilities.temp_int do |size|
+        begin
+          k     = key.to_s
+          value = C.get(@db, k, k.size, size)
+          if value.address.zero?
+            if block_given?
+              unless default.empty?
+                warn "block supersedes default value argument"
+              end
+              yield key
+            elsif not default.empty?
+              default.first
+            else
+              fail IndexError, "key not found"
+            end
+          else
+            value.get_bytes(0, size.get_int(0))
+          end
+        ensure
+          Utilities.free(value) if value
         end
-      else
-        value.get_bytes(0, size.get_int(0))
       end
-    ensure
-      size.free     if size
-      C.free(value) if value
     end
     
     def [](key)
@@ -102,8 +120,44 @@ module OklahomaMixer
       keys.map { |key| self[key] }
     end
     
-    def close
-      C.close(@db)
+    #################
+    ### Iteration ###
+    #################
+    
+    include Enumerable
+    
+    def each_key
+      C.iterinit(@db)
+      loop do
+        Utilities.temp_int do |size|
+          begin
+            key = C.iternext(@db, size)
+            return self if key.address.zero?
+            yield key.get_bytes(0, size.get_int(0))
+          ensure
+            Utilities.free(key) if key
+          end
+        end
+      end
+    end
+    
+    def each
+      C.iterinit(@db)
+      loop do
+        Utilities.temp_xstr do |key|
+          Utilities.temp_xstr do |value|
+            return self unless C.iternext3(@db, key.xstr, value.xstr)
+            yield [key.to_s, value.to_s]
+          end
+        end
+      end
+    end
+    alias_method :each_pair, :each
+    
+    def each_value
+      each do |key, value|
+        yield value
+      end
     end
   end
 end
