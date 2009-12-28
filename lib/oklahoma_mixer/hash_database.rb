@@ -15,8 +15,7 @@ module OklahomaMixer
     end
     
     def close
-      C.close(@db)
-      C.del(@db)
+      C.del(@db)  # closes before it deletes the object
     end
     
     ################################
@@ -36,51 +35,50 @@ module OklahomaMixer
     end
     
     def store(key, value, mode = nil)
-      k, v = key.to_s, value.to_s
-      case mode
-      when :keep
-        C.putkeep(@db, k, k.size, v, v.size)
-      when :cat
-        C.putcat(@db, k, k.size, v, v.size)
-        value
-      when :async
-        C.putasync(@db, k, k.size, v, v.size)
-        value
-      when :counter
-        case value
-        when Float
-          C.adddouble(@db, k, k.size, value)
-        else
-          C.addint(@db, k, k.size, value.to_i)
-        end
+      k, v   = key.to_s, value.to_s
+      result = value
+      if block_given?
+        warn "block supersedes mode argument" unless mode.nil?
+        callback = lambda { |old_value_pointer, old_size, returned_size, _|
+          old_value   = old_value_pointer.get_bytes(0, old_size)
+          replacement = yield(key, old_value, value).to_s
+          returned_size.put_int(0, replacement.size)
+          FFI::MemoryPointer.from_string(replacement)
+        }
+        C.putproc(@db, k, k.size, v, v.size, callback, nil)
       else
-        C.put(@db, k, k.size, v, v.size)
-        value
+        case mode
+        when :keep
+          result = C.putkeep(@db, k, k.size, v, v.size)
+        when :cat
+          C.putcat(@db, k, k.size, v, v.size)
+        when :async
+          C.putasync(@db, k, k.size, v, v.size)
+        when :counter
+          result = case value
+                   when Float then C.adddouble(@db, k, k.size, value)
+                   else            C.addint(@db, k, k.size, value.to_i)
+                   end
+        else
+          C.put(@db, k, k.size, v, v.size)
+        end
       end
+      result
     end
     alias_method :[]=, :store
     
     def fetch(key, *default)
-      Utilities.temp_int do |size|
-        begin
-          k     = key.to_s
-          value = C.get(@db, k, k.size, size)
-          if value.address.zero?
-            if block_given?
-              unless default.empty?
-                warn "block supersedes default value argument"
-              end
-              yield key
-            elsif not default.empty?
-              default.first
-            else
-              fail IndexError, "key not found"
-            end
-          else
-            value.get_bytes(0, size.get_int(0))
-          end
-        ensure
-          Utilities.free(value) if value
+      k        = key.to_s
+      if value = read_from_c_func(:get, @db, k, k.size)
+        value
+      else
+        if block_given?
+          warn "block supersedes default value argument" unless default.empty?
+          yield key
+        elsif not default.empty?
+          default.first
+        else
+          fail IndexError, "key not found"
         end
       end
     end
@@ -101,17 +99,9 @@ module OklahomaMixer
     alias_method :key?,     :include?
     alias_method :member?,  :include?
     
-    def update(hash)
-      if block_given?
-        hash.each do |key, value|
-          unless store(key, value, :keep)
-            store(key, yield(key, self[key], value))
-          end
-        end
-      else
-        hash.each do |key, value|
-          store(key, value)
-        end
+    def update(hash, &dup_handler)
+      hash.each do |key, value|
+        store(key, value, &dup_handler)
       end
       self
     end
@@ -129,15 +119,8 @@ module OklahomaMixer
     def each_key
       C.iterinit(@db)
       loop do
-        Utilities.temp_int do |size|
-          begin
-            key = C.iternext(@db, size)
-            return self if key.address.zero?
-            yield key.get_bytes(0, size.get_int(0))
-          ensure
-            Utilities.free(key) if key
-          end
-        end
+        return self unless key = read_from_c_func(:iternext, @db)
+        yield key
       end
     end
     
@@ -146,7 +129,7 @@ module OklahomaMixer
       loop do
         Utilities.temp_xstr do |key|
           Utilities.temp_xstr do |value|
-            return self unless C.iternext3(@db, key.xstr, value.xstr)
+            return self unless C.iternext3(@db, key.pointer, value.pointer)
             yield [key.to_s, value.to_s]
           end
         end
@@ -157,6 +140,22 @@ module OklahomaMixer
     def each_value
       each do |key, value|
         yield value
+      end
+    end
+    
+    #######
+    private
+    #######
+    
+    def read_from_c_func(func, *args)
+      Utilities.temp_int do |size|
+        begin
+          args    << size
+          pointer =  C.send(func, *args)
+          pointer.address.zero? ? nil : pointer.get_bytes(0, size.get_int(0))
+        ensure
+          Utilities.free(pointer) if pointer
+        end
       end
     end
   end

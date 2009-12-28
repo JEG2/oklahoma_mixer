@@ -7,15 +7,9 @@ module OklahomaMixer
       
       prefix :tchdb
       
-      func :name    => :new,
-           :returns => :pointer
-      func :name    => :del,
-           :args    => :pointer
+      def_new_and_del_funcs
       func :name    => :open,
            :args    => [:pointer, :string, :int],
-           :returns => :bool
-      func :name    => :close,
-           :args    => :pointer,
            :returns => :bool
 
       func :name    => :put,
@@ -29,6 +23,13 @@ module OklahomaMixer
            :returns => :bool
       func :name    => :putasync,
            :args    => [:pointer, :pointer, :int, :pointer, :int],
+           :returns => :bool
+      call :name    => :TCPDPROC,
+           :args    => [:pointer, :int, :pointer, :pointer],
+           :returns => :pointer
+      func :name    => :putproc,
+           :args    => [:pointer, :pointer, :int, :pointer, :int, :TCPDPROC,
+                        :pointer],
            :returns => :bool
       func :name    => :addint,
            :args    => [:pointer, :pointer, :int, :int],

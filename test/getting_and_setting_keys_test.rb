@@ -74,6 +74,20 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
     assert_in_delta(2.5, @db.store(:f, -1.0, :counter), 2 ** -20)
   end
   
+  def test_storing_with_a_block_allows_duplicate_resolution
+    @db[:key] = :old
+    assert_equal( :new, @db.store(:key, :new) { |key, old, new|
+                                                "#{key}=#{old}&#{new}" } )
+    assert_equal("key=old&new", @db[:key])
+  end
+
+  def test_storing_with_a_block_overrides_a_mode_and_triggers_a_warning
+    warning = capture_stderr do
+      assert_equal(:new, @db.store(:key, :new, :async) { |key, old, new| })
+    end
+    assert(!warning.empty?, "A warning was not issued for a mode and block")
+  end
+  
   def test_store_and_fetch_can_also_be_used_through_the_indexing_brackets
     assert_equal(42,   @db[:num] = 42)
     assert_equal("42", @db[:num])

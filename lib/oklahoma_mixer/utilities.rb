@@ -32,6 +32,21 @@ module OklahomaMixer
         args << details.fetch(:returns, :void)
         attach_function(*args)
       end
+      
+      def call(details)
+        args =  [ ]
+        args << details[:name]
+        args << Array(details[:args])
+        args << details.fetch(:returns, :void)
+        callback(*args)
+      end
+      
+      def def_new_and_del_funcs
+        func :name    => :new,
+             :returns => :pointer
+        func :name    => :del,
+             :args    => :pointer
+      end
     end
     
     def self.temp_int

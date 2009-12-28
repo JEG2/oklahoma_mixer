@@ -5,10 +5,7 @@ module OklahomaMixer
 
       prefix :tcxstr
       
-      func :name    => :new,
-           :returns => :pointer
-      func :name    => :del,
-           :args    => :pointer
+      def_new_and_del_funcs
 
       func :name    => :ptr,
            :args    => :pointer,
