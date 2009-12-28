@@ -159,4 +159,24 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
     @db[:c] = 2
     assert_equal(["1", 42, "2"], @db.values_at(:a, :b, :c))
   end
+  
+  def test_delete_removes_a_key_from_the_database
+    @db[:key] = :value
+    assert_equal("value", @db.delete(:key))
+    assert_nil(@db[:key])
+  end
+  
+  def test_delete_returns_nil_for_a_missing_key
+    assert_nil(@db.delete(:missing))
+  end
+  
+  def test_delete_can_be_passed_a_block_to_handle_missing_keys
+    assert_equal(42, @db.delete(:missing) { 42 })
+  end
+  
+  def test_clear_removes_all_keys_from_the_database
+    @db.update(:a => 1, :b => 2, :c => 3)
+    assert_equal(@db, @db.clear)
+    assert_equal([nil, nil, nil], @db.values_at(:a, :b, :c))
+  end
 end

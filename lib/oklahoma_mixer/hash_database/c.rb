@@ -37,9 +37,15 @@ module OklahomaMixer
       func :name    => :adddouble,
            :args    => [:pointer, :pointer, :int, :double],
            :returns => :double
+      func :name    => :out,
+           :args    => [:pointer, :pointer, :int],
+           :returns => :bool
       func :name    => :get,
            :args    => [:pointer, :pointer, :int, :pointer],
            :returns => :pointer
+      func :name    => :vanish,
+           :args    => :pointer,
+           :returns => :bool
 
       func :name    => :iterinit,
            :args    => [:pointer],

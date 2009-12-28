@@ -81,8 +81,13 @@ class TestIteration < Test::Unit::TestCase
             "A value was not found during iteration" )
   end
   
+  def test_delete_if_removes_all_keys_for_which_the_block_returns_true
+    @db.delete_if { |key, _| key != "a" }
+    assert_equal([%w[a aa]], @db.to_a)
+  end
+  
   def test_iterators_return_self_to_match_hash_interface
-    %w[each_key each each_pair each_value].each do |iterator|
+    %w[each_key each each_pair each_value delete_if].each do |iterator|
       assert_equal(@db, @db.send(iterator) { })
     end
   end

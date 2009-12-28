@@ -89,16 +89,6 @@ module OklahomaMixer
       nil
     end
     
-    def include?(key)
-      fetch(key)
-      true
-    rescue IndexError
-      false
-    end
-    alias_method :has_key?, :include?
-    alias_method :key?,     :include?
-    alias_method :member?,  :include?
-    
     def update(hash, &dup_handler)
       hash.each do |key, value|
         store(key, value, &dup_handler)
@@ -109,6 +99,30 @@ module OklahomaMixer
     def values_at(*keys)
       keys.map { |key| self[key] }
     end
+    
+    def delete(key, &missing_handler)
+      value = fetch(key, &missing_handler)
+      k     = key.to_s
+      C.out(@db, k, k.size)
+      value
+    rescue IndexError
+      nil
+    end
+    
+    def clear
+      C.vanish(@db)
+      self
+    end
+    
+    def include?(key)
+      fetch(key)
+      true
+    rescue IndexError
+      false
+    end
+    alias_method :has_key?, :include?
+    alias_method :key?,     :include?
+    alias_method :member?,  :include?
     
     #################
     ### Iteration ###
@@ -140,6 +154,12 @@ module OklahomaMixer
     def each_value
       each do |key, value|
         yield value
+      end
+    end
+    
+    def delete_if
+      each do |key, value|
+        delete(key) if yield key, value
       end
     end
     
