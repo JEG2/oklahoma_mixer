@@ -34,4 +34,8 @@ class TestBinaryData < Test::Unit::TestCase
       assert_equal(@value, value)
     end
   end
+  
+  def test_null_bytes_are_preserved_by_key_listing
+    assert_equal([@key], @db.keys)
+  end
 end
