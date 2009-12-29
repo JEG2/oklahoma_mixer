@@ -33,6 +33,18 @@ module OklahomaMixer
         attach_function(*args)
       end
       
+      def read_from_func(func, *args)
+        Utilities.temp_int do |size|
+          begin
+            args    << size
+            pointer =  send(func, *args)
+            pointer.address.zero? ? nil : pointer.get_bytes(0, size.get_int(0))
+          ensure
+            Utilities.free(pointer) if pointer
+          end
+        end
+      end
+      
       def call(details)
         args =  [ ]
         args << details[:name]
@@ -60,7 +72,7 @@ module OklahomaMixer
       xstr = ExtensibleString.new
       yield xstr
     ensure
-      xstr.delete if xstr
+      xstr.free if xstr
     end
     
     extend FFIDSL

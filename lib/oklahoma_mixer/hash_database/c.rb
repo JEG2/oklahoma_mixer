@@ -46,6 +46,15 @@ module OklahomaMixer
       func :name    => :vanish,
            :args    => :pointer,
            :returns => :bool
+      func :name    => :vanish,
+           :args    => :pointer,
+           :returns => :bool
+      func :name    => :fwmkeys,
+           :args    => [:pointer, :pointer, :int, :int],
+           :returns => :pointer
+      func :name    => :rnum,
+           :args    => :pointer,
+           :returns => :uint64
 
       func :name    => :iterinit,
            :args    => [:pointer],

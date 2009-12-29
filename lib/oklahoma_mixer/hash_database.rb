@@ -1,4 +1,5 @@
 require "oklahoma_mixer/hash_database/c"
+require "oklahoma_mixer/array_list"
 require "oklahoma_mixer/extensible_string"
 
 module OklahomaMixer
@@ -69,7 +70,7 @@ module OklahomaMixer
     
     def fetch(key, *default)
       k        = key.to_s
-      if value = read_from_c_func(:get, @db, k, k.size)
+      if value = C.read_from_func(:get, @db, k, k.size)
         value
       else
         if block_given?
@@ -100,6 +101,23 @@ module OklahomaMixer
       keys.map { |key| self[key] }
     end
     
+    def keys(options = { })
+      prefix = options.fetch(:prefix, "").to_s
+      limit  = options.fetch(:limit,  -1)
+      list   = ArrayList.new(C.fwmkeys(@db, prefix, prefix.size, limit))
+      list.to_a
+    ensure
+      list.free if list
+    end
+    
+    def values
+      values = [ ]
+      each_value do |value|
+        values << value
+      end
+      values
+    end
+    
     def delete(key, &missing_handler)
       value = fetch(key, &missing_handler)
       k     = key.to_s
@@ -124,6 +142,11 @@ module OklahomaMixer
     alias_method :key?,     :include?
     alias_method :member?,  :include?
     
+    def size
+      C.rnum(@db)
+    end
+    alias_method :length, :size
+    
     #################
     ### Iteration ###
     #################
@@ -133,7 +156,7 @@ module OklahomaMixer
     def each_key
       C.iterinit(@db)
       loop do
-        return self unless key = read_from_c_func(:iternext, @db)
+        return self unless key = C.read_from_func(:iternext, @db)
         yield key
       end
     end
@@ -160,22 +183,6 @@ module OklahomaMixer
     def delete_if
       each do |key, value|
         delete(key) if yield key, value
-      end
-    end
-    
-    #######
-    private
-    #######
-    
-    def read_from_c_func(func, *args)
-      Utilities.temp_int do |size|
-        begin
-          args    << size
-          pointer =  C.send(func, *args)
-          pointer.address.zero? ? nil : pointer.get_bytes(0, size.get_int(0))
-        ensure
-          Utilities.free(pointer) if pointer
-        end
       end
     end
   end

@@ -160,6 +160,34 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
     assert_equal(["1", 42, "2"], @db.values_at(:a, :b, :c))
   end
   
+  def test_keys_returns_all_keys_in_the_database
+    @db.update(:a => 1, :b => 2, :c => 3)
+    assert_equal(%w[a b c], @db.keys.sort)
+  end
+  
+  def test_keys_can_take_a_prefix_which_all_returned_keys_must_start_with
+    @db.update( "names:1:first" => "James",
+                "names:1:last"  => "Gray", 
+                "names:2:first" => "Other",
+                "names:2:last"  => "Guy" )
+    assert_equal( %w[names:1:first names:1:last],
+                  @db.keys(:prefix => "names:1:").sort )
+  end
+  
+  def test_keys_can_take_a_limit_of_keys_to_return
+    @db.update(:a => 1, :b => 2, :c => 3)
+    keys = @db.keys(:limit => 2)
+    assert_equal(2, keys.size)
+    keys.each do |key|
+      assert(%w[a b c].include?(key), "Key wasn't in known keys")
+    end
+  end
+  
+  def test_values_returns_all_values_in_the_database
+    @db.update(:a => 1, :b => 2, :c => 3)
+    assert_equal(%w[1 2 3], @db.values.sort)
+  end
+  
   def test_delete_removes_a_key_from_the_database
     @db[:key] = :value
     assert_equal("value", @db.delete(:key))
@@ -178,5 +206,13 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
     @db.update(:a => 1, :b => 2, :c => 3)
     assert_equal(@db, @db.clear)
     assert_equal([nil, nil, nil], @db.values_at(:a, :b, :c))
+  end
+  
+  def test_size_and_length_return_the_count_of_key_value_pairs_in_the_database
+    assert_equal(0, @db.size)
+    assert_equal(0, @db.length)
+    @db.update(:a => 1, :b => 2, :c => 3)
+    assert_equal(3, @db.size)
+    assert_equal(3, @db.length)
   end
 end

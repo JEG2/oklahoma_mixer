@@ -12,7 +12,7 @@ module OklahomaMixer
       data_pointer.get_bytes(0, data_size)
     end
     
-    def delete
+    def free
       C.del(@pointer)
     end
     
