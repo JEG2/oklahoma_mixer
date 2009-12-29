@@ -11,6 +11,15 @@ module OklahomaMixer
       func :name    => :open,
            :args    => [:pointer, :string, :int],
            :returns => :bool
+      func :name    => :sync,
+           :args    => :pointer,
+           :returns => :bool
+      func :name    => :fsiz,
+           :args    => :pointer,
+           :returns => :uint64
+      func :name    => :copy,
+           :args    => [:pointer, :string],
+           :returns => :bool
 
       func :name    => :put,
            :args    => [:pointer, :pointer, :int, :pointer, :int],

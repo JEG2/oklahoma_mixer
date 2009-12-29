@@ -4,9 +4,9 @@ require "oklahoma_mixer/extensible_string"
 
 module OklahomaMixer
   class HashDatabase
-    ###########################
-    ### Opening and Closing ###
-    ###########################
+    ###################
+    ### File System ###
+    ###################
     
     def initialize(path, options = { })
       @path        = path
@@ -14,6 +14,23 @@ module OklahomaMixer
       self.default = options[:default]
       C.open(@db, path, (1 << 1) | (1 << 2))
     end
+    
+    attr_reader :path
+    
+    def file_size
+      C.fsiz(@db)
+    end
+    
+    def flush
+      C.sync(@db)
+    end
+    alias_method :sync,  :flush
+    alias_method :fsync, :flush
+    
+    def copy(path)
+      C.copy(@db, path)
+    end
+    alias_method :backup, :copy
     
     def close
       C.del(@db)  # closes before it deletes the object
