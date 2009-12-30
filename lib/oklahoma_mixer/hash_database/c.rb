@@ -4,6 +4,11 @@ module OklahomaMixer
   class HashDatabase
     module C
       extend OklahomaMixer::Utilities::FFIDSL
+
+      OPTS = enum :HDBTLARGE,   1 << 0,
+                  :HDBTDEFLATE, 1 << 1,
+                  :HDBTBZIP,    1 << 2,
+                  :HDBTTCBS,    1 << 3
       
       prefix :tchdb
       
@@ -19,6 +24,25 @@ module OklahomaMixer
            :returns => :uint64
       func :name    => :copy,
            :args    => [:pointer, :string],
+           :returns => :bool
+
+      func :name    => :setmutex,
+           :args    => :pointer,
+           :returns => :bool
+      func :name    => :tune,
+           :args    => [:pointer, :int64, :int8, :int8, :uint8],
+           :returns => :bool
+      func :name    => :setcache,
+           :args    => [:pointer, :int32],
+           :returns => :bool
+      func :name    => :setxmsiz,
+           :args    => [:pointer, :int64],
+           :returns => :bool
+      func :name    => :setdfunit,
+           :args    => [:pointer, :int32],
+           :returns => :bool
+      func :name    => :optimize,
+           :args    => [:pointer, :int64, :int8, :int8, :uint8],
            :returns => :bool
 
       func :name    => :put,

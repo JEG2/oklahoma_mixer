@@ -12,7 +12,47 @@ module OklahomaMixer
       @path        = path
       @db          = C.new
       self.default = options[:default]
+      
+      C.setmutex(@db) if options[:mutex]
+      if options.values_at( :bucket_array_size,
+                            :record_alignment_power,
+                            :max_free_block_power,
+                            :options ).any?
+        optimize(options.merge(:tune => true))
+      end
+      if max_cached_records = options[:max_cached_records]
+        C.setcache(@db, max_cached_records.to_i)
+      end
+      if extra_mapped_mem = options[:extra_mapped_mem]
+        C.xmsiz(@db, extra_mapped_mem.to_i)
+      end
+      if auto_defrag_step_unit = options[:auto_defrag_step_unit]
+        C.dfunit(@db, auto_defrag_step_unit.to_i)
+      end
+      
       C.open(@db, path, (1 << 1) | (1 << 2))
+    end
+    
+    def optimize(options)
+      bnum = options.fetch(:bucket_array_size,       0).to_i
+      apow = options.fetch(:record_alignment_power, -1).to_i
+      fpow = options.fetch(:max_free_block_power,   -1).to_i
+      opts = options.fetch(:options,                 0xFF)
+      unless opts.is_a? Integer
+        opts = opts.to_s.downcase.scan(/./m).inject(0) do |int, o|
+          case o
+          when "l" then int | C::OPTS[:HDBTLARGE]
+          when "d" then int | C::OPTS[:HDBTDEFLATE]
+          when "b" then int | C::OPTS[:HDBTBZIP]
+          when "t" then int | C::OPTS[:HDBTTCBS]
+          else
+            warn "skipping unrecognized option"
+            int
+          end
+        end
+      end
+      func = options[:tune] ? :tune : :optimize
+      C.send(func, @db, bnum, apow, fpow, opts)
     end
     
     attr_reader :path
