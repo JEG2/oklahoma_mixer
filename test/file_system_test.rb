@@ -1,6 +1,6 @@
 require "test_helper"
 
-class TestHashDatabase < Test::Unit::TestCase
+class TestFileSystem < Test::Unit::TestCase
   def setup
     @db = hdb
   end
