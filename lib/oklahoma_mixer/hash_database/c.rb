@@ -25,6 +25,9 @@ module OklahomaMixer
       func :name    => :copy,
            :args    => [:pointer, :string],
            :returns => :bool
+      func :name    => :defrag,
+           :args    => [:pointer, :int64],
+           :returns => :bool
 
       func :name    => :setmutex,
            :args    => :pointer,

@@ -72,6 +72,10 @@ module OklahomaMixer
     end
     alias_method :backup, :copy
     
+    def defrag(steps = 0)
+      C.defrag(@db, steps.to_i)
+    end
+    
     def close
       C.del(@db)  # closes before it deletes the object
     end

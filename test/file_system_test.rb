@@ -53,4 +53,22 @@ class TestFileSystem < Test::Unit::TestCase
     new_db.close            if new_db
     new_db_2.close          if new_db_2
   end
+  
+  def test_defrag_removes_wholes_in_the_database_file
+    # load some data
+    data = "X" * 1024
+    100.times do |i|
+      @db[i] = data
+    end
+    # delete some data
+    (0...100).sort_by { rand }.first(10).each do |i|
+      @db.delete(i)
+    end
+    # push changes to disk
+    @db.flush
+    # defragment the database file
+    old_size = File.size(@db.path)
+    @db.defrag
+    assert_operator(old_size, :>, File.size(@db.path))
+  end
 end
