@@ -20,4 +20,24 @@ class TestTopLevelInterface < Test::Unit::TestCase
       OKMixer.open("unrecognized")
     end
   end
+  
+  def test_open_with_a_block_returns_the_value_of_the_last_expression
+    assert_equal(42, OKMixer.open(db_path("tch")) { 42 })
+  end
+  
+  def test_open_with_a_block_automatically_closes_the_database
+    OKMixer.open(db_path("tch")) do |db|
+      db[:data] = :saved
+    end
+    OKMixer.open(db_path("tch")) do |db|  # we can reopen since the lock is gone
+      assert_equal("saved", db[:data])
+    end
+  end
+  
+  def test_open_without_a_block_returns_the_still_open_database
+    db = OKMixer.open(db_path("tch"))
+    assert_nil(db[:unset])  # we can fetch a value since it's still open
+  ensure
+    db.close if db
+  end
 end

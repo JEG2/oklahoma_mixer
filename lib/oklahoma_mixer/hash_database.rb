@@ -15,7 +15,7 @@ module OklahomaMixer
       @abort               = false
       @nested_transactions = options[:nested_transactions]
       
-      C.setmutex(@db) if options[:mutex]
+      try(:setmutex) if options[:mutex]
       if options.values_at( :bucket_array_size,
                             :record_alignment_power,
                             :max_free_block_power,
@@ -23,13 +23,13 @@ module OklahomaMixer
         optimize(options.merge(:tune => true))
       end
       if max_cached_records = options[:max_cached_records]
-        C.setcache(@db, max_cached_records.to_i)
+        try(:setcache, max_cached_records.to_i)
       end
       if extra_mapped_mem = options[:extra_mapped_mem]
-        C.xmsiz(@db, extra_mapped_mem.to_i)
+        try(:xmsiz, extra_mapped_mem.to_i)
       end
       if auto_defrag_step_unit = options[:auto_defrag_step_unit]
-        C.dfunit(@db, auto_defrag_step_unit.to_i)
+        try(:dfunit, auto_defrag_step_unit.to_i)
       end
       
       warn "mode option supersedes mode argument" if mode and options[:mode]
@@ -50,7 +50,7 @@ module OklahomaMixer
           end
         end
       end
-      C.open(@db, path, mode)
+      try(:open, path, mode)
     end
     
     def optimize(options)
@@ -72,7 +72,7 @@ module OklahomaMixer
         end
       end
       func = options[:tune] ? :tune : :optimize
-      C.send(func, @db, bnum, apow, fpow, opts)
+      try(func, bnum, apow, fpow, opts)
     end
     
     attr_reader :path
@@ -82,22 +82,22 @@ module OklahomaMixer
     end
     
     def flush
-      C.sync(@db)
+      try(:sync)
     end
     alias_method :sync,  :flush
     alias_method :fsync, :flush
     
     def copy(path)
-      C.copy(@db, path)
+      try(:copy, path)
     end
     alias_method :backup, :copy
     
     def defrag(steps = 0)
-      C.defrag(@db, steps.to_i)
+      try(:defrag, steps.to_i)
     end
     
     def close
-      C.del(@db)  # closes before it deletes the object
+      try(:del)  # closes before it deletes the object
     end
     
     ################################
@@ -127,22 +127,24 @@ module OklahomaMixer
           returned_size.put_int(0, replacement.size)
           FFI::MemoryPointer.from_string(replacement)
         }
-        C.putproc(@db, k, k.size, v, v.size, callback, nil)
+        try(:putproc, k, k.size, v, v.size, callback, nil)
       else
         case mode
         when :keep
-          result = C.putkeep(@db, k, k.size, v, v.size)
+          result = try( :putkeep, k, k.size, v, v.size,
+                        :no_error => {21 => false} )
         when :cat
-          C.putcat(@db, k, k.size, v, v.size)
+          try(:putcat, k, k.size, v, v.size)
         when :async
-          C.putasync(@db, k, k.size, v, v.size)
+          try(:putasync, k, k.size, v, v.size)
         when :counter
           result = case value
-                   when Float then C.adddouble(@db, k, k.size, value)
+                   when Float then try( :adddouble, k, k.size, value,
+                                        :failure => lambda { |n| n.nan? } )
                    else            C.addint(@db, k, k.size, value.to_i)
                    end
         else
-          C.put(@db, k, k.size, v, v.size)
+          try(:put, k, k.size, v, v.size)
         end
       end
       result
@@ -151,7 +153,8 @@ module OklahomaMixer
     
     def fetch(key, *default)
       k        = key.to_s
-      if value = C.read_from_func(:get, @db, k, k.size)
+      if value = try( :read_from_func, :get, k, k.size,
+                      :failure => nil, :no_error => {22 => nil} )
         value
       else
         if block_given?
@@ -202,14 +205,14 @@ module OklahomaMixer
     def delete(key, &missing_handler)
       value = fetch(key, &missing_handler)
       k     = key.to_s
-      C.out(@db, k, k.size)
+      try(:out, k, k.size, :no_error => {22 => nil})
       value
     rescue IndexError
       nil
     end
     
     def clear
-      C.vanish(@db)
+      try(:vanish)
       self
     end
     
@@ -235,19 +238,22 @@ module OklahomaMixer
     include Enumerable
     
     def each_key
-      C.iterinit(@db)
+      try(:iterinit)
       loop do
-        return self unless key = C.read_from_func(:iternext, @db)
+        return self unless key = try( :read_from_func, :iternext,
+                                      :failure  => nil,
+                                      :no_error => {22 => nil} )
         yield key
       end
     end
     
     def each
-      C.iterinit(@db)
+      try(:iterinit)
       loop do
         Utilities.temp_xstr do |key|
           Utilities.temp_xstr do |value|
-            return self unless C.iternext3(@db, key.pointer, value.pointer)
+            return self unless try( :iternext3, key.pointer, value.pointer,
+                                    :no_error => {22 => false} )
             yield [key.to_s, value.to_s]
           end
         end
@@ -277,7 +283,7 @@ module OklahomaMixer
         when :ignore
           return yield
         when :fail, :raise
-          fail "nested transaction"
+          fail Error::TransactionError, "nested transaction"
         end
       end
       
@@ -286,27 +292,51 @@ module OklahomaMixer
       
       begin
         catch(:finish_transaction) do
-          C.tranbegin(@db)
+          try(:tranbegin)
           yield
         end
       rescue Exception
         @abort = true
         raise
       ensure
-        C.send("tran#{@abort ? :abort : :commit}", @db)
+        try("tran#{@abort ? :abort : :commit}")
         @in_transaction = false
       end
     end
     
     def commit
-      fail "not in transaction" unless @in_transaction
+      fail Error::TransactionError, "not in transaction" unless @in_transaction
       throw :finish_transaction
     end
     
     def abort
-      fail "not in transaction" unless @in_transaction
+      fail Error::TransactionError, "not in transaction" unless @in_transaction
       @abort = true
       throw :finish_transaction
+    end
+    
+    #######
+    private
+    #######
+    
+    def try(func, *args)
+      options  = args.last.is_a?(Hash) ? args.pop : { }
+      failure  = options.fetch(:failure, false)
+      no_error = options.fetch(:no_error, { })
+      result   = func == :read_from_func                      ?
+                 C.read_from_func(args[0], @db, *args[1..-1]) :
+                 C.send(func, @db, *args)
+      if (failure.is_a?(Proc) and failure[result]) or result == failure
+        error_code = C.ecode(@db)
+        if no_error.include? error_code
+          no_error[error_code]
+        else
+          error_message = C.errmsg(error_code)
+          fail Error::CabinetError, "#{error_message} (#{error_code})"
+        end
+      else
+        result
+      end
     end
   end
 end

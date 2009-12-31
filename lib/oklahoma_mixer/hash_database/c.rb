@@ -35,6 +35,13 @@ module OklahomaMixer
            :args    => [:pointer, :int64],
            :returns => :bool
 
+      func :name    => :ecode,
+           :args    => :pointer,
+           :returns => :int
+      func :name    => :errmsg,
+           :args    => :int,
+           :returns => :string
+
       func :name    => :setmutex,
            :args    => :pointer,
            :returns => :bool

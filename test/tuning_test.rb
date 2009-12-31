@@ -121,7 +121,7 @@ class TestTuning < Test::Unit::TestCase
     [:fail, :raise].each do |setting|
       hdb(:nested_transactions => setting) do |db|
         db.transaction do
-          assert_raise(RuntimeError) do
+          assert_raise(OKMixer::Error::TransactionError) do
             db.transaction {  }  # nested fails with error
           end
         end
@@ -129,7 +129,40 @@ class TestTuning < Test::Unit::TestCase
     end
   end
   
+  def test_a_mode_string_can_be_passed
+    assert_raise(OKMixer::Error::CabinetError) do  # file not found
+      hdb("r")
+    end
+  end
+  
+  def test_the_mode_can_be_passed_as_as_option
+    assert_raise(OKMixer::Error::CabinetError) do  # file not found
+      hdb(:mode => "r")
+    end
+  end
+  
+  def test_an_option_mode_overrides_the_mode_argument_and_triggers_a_warning
+    warning = capture_stderr do
+      hdb("r", :mode => "wc") do
+        # just open and close
+      end
+    end
+    assert( !warning.empty?,
+            "A warning was not issued for an option mode with a mode argument" )
+  end
+  
+  def test_an_unknown_mode_triggers_a_warning
+    warning = capture_stderr do
+      hdb("wcu") do
+        # just open and close
+      end
+    end
+    assert(!warning.empty?, "A warning was not issued for an unknown mode")
+  end
+  
+  #######
   private
+  #######
   
   def assert_option_calls(c_call, options)
     args = capture_args(OKMixer::HashDatabase::C, c_call[0]) do

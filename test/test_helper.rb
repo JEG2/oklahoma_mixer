@@ -29,8 +29,8 @@ module TestHelper
                "#{self.class.to_s.sub(/\ATest/, '').downcase}.#{ext}" )
   end
 
-  def hdb(options = { })
-    db = OKMixer::HashDatabase.new(db_path("tch"), options)
+  def hdb(*args)
+    db = OKMixer::HashDatabase.new(db_path("tch"), *args)
     if block_given?
       begin
         yield db

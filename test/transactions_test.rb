@@ -53,13 +53,13 @@ class TestTransactions < Test::Unit::TestCase
   end
   
   def test_commit_fails_with_an_error_if_called_outside_a_transaction
-    assert_raise(RuntimeError) do
+    assert_raise(OKMixer::Error::TransactionError) do
       @db.commit
     end
   end
   
   def test_abort_fails_with_an_error_if_called_outside_a_transaction
-    assert_raise(RuntimeError) do
+    assert_raise(OKMixer::Error::TransactionError) do
       @db.abort
     end
   end

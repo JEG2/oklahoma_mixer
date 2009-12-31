@@ -1,5 +1,6 @@
 require "ffi"
 
+require "oklahoma_mixer/error"
 require "oklahoma_mixer/utilities"
 
 require "oklahoma_mixer/extensible_string/c"
