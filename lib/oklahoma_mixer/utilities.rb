@@ -78,6 +78,6 @@ module OklahomaMixer
     prefix :tc
     
     func :name => :free,
-         :args => [:pointer]
+         :args => :pointer
   end
 end
