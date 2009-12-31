@@ -106,6 +106,29 @@ class TestTuning < Test::Unit::TestCase
     assert_option_calls([:dfunit, 42], :auto_defrag_step_unit => "42")
   end
   
+  def test_nested_transactions_can_be_ignored
+    hdb(:nested_transactions => :ignore) do |db|
+      result = db.transaction {
+        db.transaction {  # ignored
+          41
+        } + 1             # ignored
+      }
+      assert_equal(42, result)
+    end
+  end
+  
+  def test_nested_transactions_can_be_set_to_fail_with_an_error
+    [:fail, :raise].each do |setting|
+      hdb(:nested_transactions => setting) do |db|
+        db.transaction do
+          assert_raise(RuntimeError) do
+            db.transaction {  }  # nested fails with error
+          end
+        end
+      end
+    end
+  end
+  
   private
   
   def assert_option_calls(c_call, options)

@@ -9,9 +9,12 @@ module OklahomaMixer
     ###################
     
     def initialize(path, options = { })
-      @path        = path
-      @db          = C.new
-      self.default = options[:default]
+      @path                = path
+      @db                  = C.new
+      self.default         = options[:default]
+      @in_transaction      = false
+      @abort               = false
+      @nested_transactions = options[:nested_transactions]
       
       C.setmutex(@db) if options[:mutex]
       if options.values_at( :bucket_array_size,
@@ -245,6 +248,48 @@ module OklahomaMixer
       each do |key, value|
         delete(key) if yield key, value
       end
+    end
+    
+    ####################
+    ### Transactions ###
+    ####################
+    
+    def transaction
+      if @in_transaction
+        case @nested_transactions
+        when :ignore
+          return yield
+        when :fail, :raise
+          fail "nested transaction"
+        end
+      end
+      
+      @in_transaction = true
+      @abort          = false
+      
+      begin
+        catch(:finish_transaction) do
+          C.tranbegin(@db)
+          yield
+        end
+      rescue Exception
+        @abort = true
+        raise
+      ensure
+        C.send("tran#{@abort ? :abort : :commit}", @db)
+        @in_transaction = false
+      end
+    end
+    
+    def commit
+      fail "not in transaction" unless @in_transaction
+      throw :finish_transaction
+    end
+    
+    def abort
+      fail "not in transaction" unless @in_transaction
+      @abort = true
+      throw :finish_transaction
     end
   end
 end

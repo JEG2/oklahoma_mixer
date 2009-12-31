@@ -101,6 +101,16 @@ module OklahomaMixer
       func :name    => :iternext3,
            :args    => [:pointer, :pointer, :pointer],
            :returns => :bool
+
+      func :name    => :tranbegin,
+           :args    => :pointer,
+           :returns => :bool
+      func :name    => :trancommit,
+           :args    => :pointer,
+           :returns => :bool
+      func :name    => :tranabort,
+           :args    => :pointer,
+           :returns => :bool
     end
   end
 end
