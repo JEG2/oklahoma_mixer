@@ -1,14 +1,13 @@
-require "oklahoma_mixer/hash_database/c"
-require "oklahoma_mixer/array_list"
-require "oklahoma_mixer/extensible_string"
-
 module OklahomaMixer
   class HashDatabase
     ###################
     ### File System ###
     ###################
     
-    def initialize(path, options = { })
+    def initialize(path, *args)
+      options = args.last.is_a?(Hash)   ? args.last  : { }
+      mode    = !args.first.is_a?(Hash) ? args.first : nil
+      
       @path                = path
       @db                  = C.new
       self.default         = options[:default]
@@ -33,7 +32,25 @@ module OklahomaMixer
         C.dfunit(@db, auto_defrag_step_unit.to_i)
       end
       
-      C.open(@db, path, (1 << 1) | (1 << 2))
+      warn "mode option supersedes mode argument" if mode and options[:mode]
+      mode = options.fetch(:mode, mode || "wc")
+      unless mode.is_a? Integer
+        mode = mode.to_s.downcase.scan(/./m).inject(0) do |int, m|
+          case m
+          when "r"      then int | C::MODES[:HDBOREADER]
+          when "w"      then int | C::MODES[:HDBOWRITER]
+          when "c"      then int | C::MODES[:HDBOCREAT]
+          when "t"      then int | C::MODES[:HDBOTRUNC]
+          when "e", "n" then int | C::MODES[:HDBONOLCK]
+          when "f", "b" then int | C::MODES[:HDBOLCKNB]
+          when "s"      then int | C::MODES[:HDBOTSYNC]
+          else
+            warn "skipping unrecognized mode"
+            int
+          end
+        end
+      end
+      C.open(@db, path, mode)
     end
     
     def optimize(options)

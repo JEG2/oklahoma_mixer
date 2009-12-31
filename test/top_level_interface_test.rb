@@ -1,20 +1,23 @@
 require "test_helper"
 
-require "oklahoma_mixer"
-
 class TestTopLevelInterface < Test::Unit::TestCase
+  def teardown
+    remove_db_files
+  end
+  
   def test_ok_mixer_is_a_shortcut_for_oklahoma_mixer
     assert_same(OklahomaMixer, OKMixer)
   end
   
-  def test_hash_database_interface_is_autoloaded_as_needed
-    run_ruby <<-'END_RUBY'
-    hdb_loaded = lambda { !$".grep(/\bhash_database\.rb\z/).empty? }
-    puts "after_require = #{hdb_loaded.call}"
-    OklahomaMixer::HashDatabase
-    puts "after_access = #{hdb_loaded.call}"
-    END_RUBY
-    assert_match(/\bafter_require\s*=\s*false\b/, @output)
-    assert_match(/\bafter_access\s*=\s*true\b/,   @output)
+  def test_open_of_a_tch_extension_file_creates_a_hash_database
+    OKMixer.open(db_path("tch")) do |db|
+      assert_instance_of(OKMixer::HashDatabase, db)
+    end
+  end
+  
+  def test_open_of_an_unrecognized_extension_fails_with_an_error
+    assert_raise(ArgumentError) do
+      OKMixer.open("unrecognized")
+    end
   end
 end

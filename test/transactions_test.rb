@@ -1,7 +1,5 @@
 require "test_helper"
 
-require "oklahoma_mixer"
-
 class TestTransactions < Test::Unit::TestCase
   def setup
     @db        = hdb

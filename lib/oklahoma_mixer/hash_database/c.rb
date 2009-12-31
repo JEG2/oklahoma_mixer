@@ -1,20 +1,26 @@
-require "oklahoma_mixer/utilities"
-
 module OklahomaMixer
   class HashDatabase
     module C
       extend OklahomaMixer::Utilities::FFIDSL
 
-      OPTS = enum :HDBTLARGE,   1 << 0,
-                  :HDBTDEFLATE, 1 << 1,
-                  :HDBTBZIP,    1 << 2,
-                  :HDBTTCBS,    1 << 3
+      OPTS  = enum :HDBTLARGE,   1 << 0,
+                   :HDBTDEFLATE, 1 << 1,
+                   :HDBTBZIP,    1 << 2,
+                   :HDBTTCBS,    1 << 3
+      MODES = enum :HDBOREADER,  1 << 0,
+                   :HDBOWRITER,  1 << 1,
+                   :HDBOCREAT,   1 << 2,
+                   :HDBOTRUNC,   1 << 3,
+                   :HDBONOLCK,   1 << 4,
+                   :HDBOLCKNB,   1 << 5,
+                   :HDBOTSYNC,   1 << 6
+      
       
       prefix :tchdb
       
       def_new_and_del_funcs
       func :name    => :open,
-           :args    => [:pointer, :string, :int],
+           :args    => [:pointer, :string, MODES],
            :returns => :bool
       func :name    => :sync,
            :args    => :pointer,
@@ -33,7 +39,7 @@ module OklahomaMixer
            :args    => :pointer,
            :returns => :bool
       func :name    => :tune,
-           :args    => [:pointer, :int64, :int8, :int8, :uint8],
+           :args    => [:pointer, :int64, :int8, :int8, OPTS],
            :returns => :bool
       func :name    => :setcache,
            :args    => [:pointer, :int32],
@@ -45,7 +51,7 @@ module OklahomaMixer
            :args    => [:pointer, :int32],
            :returns => :bool
       func :name    => :optimize,
-           :args    => [:pointer, :int64, :int8, :int8, :uint8],
+           :args    => [:pointer, :int64, :int8, :int8, OPTS],
            :returns => :bool
 
       func :name    => :put,

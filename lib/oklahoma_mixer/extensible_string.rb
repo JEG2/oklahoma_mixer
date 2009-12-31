@@ -1,5 +1,3 @@
-require "oklahoma_mixer/extensible_string/c"
-
 module OklahomaMixer
   class ExtensibleString
     def initialize(pointer = C.new)
