@@ -59,6 +59,11 @@ module OklahomaMixer
       end
     end
     
+    int_min = `getconf INT_MIN 2>&1`[/-\d+/]
+    unless INT_MIN = int_min && int_min.to_i
+      warn "set OKMixer::Utilities::INT_MIN before using counters"
+    end
+    
     def self.temp_int
       int = FFI::MemoryPointer.new(:int)
       yield int

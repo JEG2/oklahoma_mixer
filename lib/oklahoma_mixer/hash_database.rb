@@ -116,11 +116,12 @@ module OklahomaMixer
           try(:putcat, k, k.size, v, v.size)
         when :async
           try(:putasync, k, k.size, v, v.size)
-        when :counter
+        when :add
           result = case value
                    when Float then try( :adddouble, k, k.size, value,
                                         :failure => lambda { |n| n.nan? } )
-                   else            C.addint(@db, k, k.size, value.to_i)
+                   else            try( :addint, k, k.size, value.to_i,
+                                        :failure => Utilities::INT_MIN )
                    end
         else
           try(:put, k, k.size, v, v.size)

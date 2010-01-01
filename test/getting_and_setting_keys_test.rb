@@ -63,15 +63,15 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
     assert_equal(["key", 3, "buffered", 8], args[1..-1])
   end
   
-  def test_storing_with_counter_mode_adds_to_an_existing_value
-    assert_equal(0, @db.store(:i,  0, :counter))
-    assert_equal(1, @db.store(:i,  1, :counter))
-    assert_equal(2, @db.store(:i,  1, :counter))
-    assert_equal(1, @db.store(:i, -1, :counter))
+  def test_storing_with_add_mode_adds_to_an_existing_value
+    assert_equal(0, @db.store(:i,  0, :add))
+    assert_equal(1, @db.store(:i,  1, :add))
+    assert_equal(2, @db.store(:i,  1, :add))
+    assert_equal(1, @db.store(:i, -1, :add))
 
-    assert_in_delta(1.5, @db.store(:f,  1.5, :counter), 2 ** -20)
-    assert_in_delta(3.5, @db.store(:f,  2.0, :counter), 2 ** -20)
-    assert_in_delta(2.5, @db.store(:f, -1.0, :counter), 2 ** -20)
+    assert_in_delta(1.5, @db.store(:f,  1.5, :add), 2 ** -20)
+    assert_in_delta(3.5, @db.store(:f,  2.0, :add), 2 ** -20)
+    assert_in_delta(2.5, @db.store(:f, -1.0, :add), 2 ** -20)
   end
   
   def test_storing_with_a_block_allows_duplicate_resolution
