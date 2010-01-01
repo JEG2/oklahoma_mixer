@@ -11,35 +11,33 @@ class TestTuning < Test::Unit::TestCase
   
   def test_a_bucket_array_size_can_be_set_with_other_tuning_defaults
     size = rand(1_000) + 1
-    assert_option_calls([:tune, size, -1, -1, 0xFF], :bucket_array_size => size)
+    assert_option_calls([:tune, size, -1, -1, 0xFF], :bnum => size)
   end
   
   def test_bucket_array_size_is_converted_to_an_int
-    assert_option_calls([:tune, 42, -1, -1, 0xFF], :bucket_array_size => "42")
+    assert_option_calls([:tune, 42, -1, -1, 0xFF], :bnum => "42")
   end
   
   def test_a_record_alignment_power_can_be_set_with_other_tuning_defaults
     pow = rand(10) + 1
-    assert_option_calls( [:tune, 0, pow, -1, 0xFF],
-                         :record_alignment_power => pow )
+    assert_option_calls([:tune, 0, pow, -1, 0xFF], :apow => pow)
   end
   
   def test_record_alignment_power_is_converted_to_an_int
-    assert_option_calls( [:tune, 0, 42, -1, 0xFF],
-                         :record_alignment_power => "42" )
+    assert_option_calls([:tune, 0, 42, -1, 0xFF], :apow => "42")
   end
   
   def test_a_max_free_block_power_can_be_set_with_other_tuning_defaults
     pow = rand(10) + 1
-    assert_option_calls([:tune, 0, -1, pow, 0xFF], :max_free_block_power => pow)
+    assert_option_calls([:tune, 0, -1, pow, 0xFF], :fpow => pow)
   end
   
   def test_max_free_block_power_is_converted_to_an_int
-    assert_option_calls([:tune, 0, -1, 42, 0xFF], :max_free_block_power => "42")
+    assert_option_calls([:tune, 0, -1, 42, 0xFF], :fpow => "42")
   end
   
   def test_options_can_be_set_with_other_tuning_defaults
-    assert_option_calls([:tune, 0, -1, -1, 1 | 2], :options => "ld")
+    assert_option_calls([:tune, 0, -1, -1, 1 | 2], :opts => "ld")
   end
   
   def test_options_is_a_string_of_characters_mapped_to_enums_and_ored_together
@@ -47,17 +45,17 @@ class TestTuning < Test::Unit::TestCase
              "b" => OKMixer::HashDatabase::C::OPTS[:HDBTBZIP] }
     assert_option_calls( [ :tune, 0, -1, -1,
                            opts.values.inject(0) { |o, v| o | v } ],
-                         :options => opts.keys.join )
+                         :opts => opts.keys.join )
   end
   
   def test_the_options_string_is_not_case_sensative
-    assert_option_calls([:tune, 0, -1, -1, 1 | 2], :options => "ld")
-    assert_option_calls([:tune, 0, -1, -1, 1 | 2], :options => "LD")
+    assert_option_calls([:tune, 0, -1, -1, 1 | 2], :opts => "ld")
+    assert_option_calls([:tune, 0, -1, -1, 1 | 2], :opts => "LD")
   end
   
   def test_unknown_options_are_ignored_with_a_warning
     warning = capture_stderr do
-      assert_option_calls([:tune, 0, -1, -1, 1 | 8], :options => "ltu")
+      assert_option_calls([:tune, 0, -1, -1, 1 | 8], :opts => "ltu")
     end
     assert(!warning.empty?, "A warning was not issued for an unknown option")
   end
@@ -65,14 +63,13 @@ class TestTuning < Test::Unit::TestCase
   def test_multiple_tuning_parameters_can_be_set_at_the_same_time
     size = rand(1_000) + 1
     assert_option_calls( [:tune, size, -1, -1, 1 | 2],
-                         :bucket_array_size => size, :options => "ld" )
+                         :bnum => size, :opts => "ld" )
   end
   
   def test_optimize_allows_the_adjustment_of_tune_options_for_an_open_database
     hdb do |db|
       args = capture_args(OKMixer::HashDatabase::C, :optimize) do
-        db.optimize( :record_alignment_power => "42",
-                     :options                => "ld" )
+        db.optimize(:apow => "42", :opts => "ld")
       end
       assert_instance_of(FFI::Pointer, args[0])
       assert_equal([0, 42, -1, 1 | 2], args[1..-1])
@@ -81,29 +78,29 @@ class TestTuning < Test::Unit::TestCase
   
   def test_limit_for_cached_records_can_be_set
     limit = rand(1_000) + 1
-    assert_option_calls([:setcache, limit], :max_cached_records => limit)
+    assert_option_calls([:setcache, limit], :rcnum => limit)
   end
   
   def test_limit_for_cached_records_is_converted_to_an_int
-    assert_option_calls([:setcache, 42], :max_cached_records => "42")
+    assert_option_calls([:setcache, 42], :rcnum => "42")
   end
   
   def test_a_size_can_be_set_for_extra_mapped_memory
     size = rand(1_000) + 1
-    assert_option_calls([:xmsiz, size], :extra_mapped_mem => size)
+    assert_option_calls([:setxmsiz, size], :xmsiz => size)
   end
   
   def test_extra_mapped_memory_size_is_converted_to_an_int
-    assert_option_calls([:xmsiz, 42], :extra_mapped_mem => "42")
+    assert_option_calls([:setxmsiz, 42], :xmsiz => "42")
   end
   
   def test_a_step_unit_can_be_set_for_auto_defragmentation
     unit = rand(1_000) + 1
-    assert_option_calls([:dfunit, unit], :auto_defrag_step_unit => unit)
+    assert_option_calls([:setdfunit, unit], :dfunit => unit)
   end
   
   def test_auto_defragmentation_step_unit_is_converted_to_an_int
-    assert_option_calls([:dfunit, 42], :auto_defrag_step_unit => "42")
+    assert_option_calls([:setdfunit, 42], :dfunit => "42")
   end
   
   def test_nested_transactions_can_be_ignored

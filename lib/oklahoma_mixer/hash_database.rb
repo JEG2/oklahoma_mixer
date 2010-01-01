@@ -1,13 +1,28 @@
 module OklahomaMixer
   class HashDatabase
+    #################
+    ### Constants ###
+    #################
+    
+    MODES   = { "r" => C::MODES[:HDBOREADER],
+                "w" => C::MODES[:HDBOWRITER],
+                "c" => C::MODES[:HDBOCREAT],
+                "t" => C::MODES[:HDBOTRUNC],
+                "e" => C::MODES[:HDBONOLCK],
+                "f" => C::MODES[:HDBOLCKNB],
+                "s" => C::MODES[:HDBOTSYNC] }
+    OPTIONS = { "l" => C::OPTS[:HDBTLARGE],
+                "d" => C::OPTS[:HDBTDEFLATE],
+                "b" => C::OPTS[:HDBTBZIP],
+                "t" => C::OPTS[:HDBTTCBS] }
+    
     ###################
     ### File System ###
     ###################
     
     def initialize(path, *args)
-      options = args.last.is_a?(Hash)   ? args.last  : { }
-      mode    = !args.first.is_a?(Hash) ? args.first : nil
-      
+      options              = args.last.is_a?(Hash)   ? args.last  : { }
+      mode                 = !args.first.is_a?(Hash) ? args.first : nil
       @path                = path
       @db                  = C.new
       self.default         = options[:default]
@@ -16,63 +31,27 @@ module OklahomaMixer
       @nested_transactions = options[:nested_transactions]
       
       try(:setmutex) if options[:mutex]
-      if options.values_at( :bucket_array_size,
-                            :record_alignment_power,
-                            :max_free_block_power,
-                            :options ).any?
+      if options.values_at(:bnum, :apow, :fpow, :opts).any?
         optimize(options.merge(:tune => true))
       end
-      if max_cached_records = options[:max_cached_records]
-        try(:setcache, max_cached_records.to_i)
-      end
-      if extra_mapped_mem = options[:extra_mapped_mem]
-        try(:xmsiz, extra_mapped_mem.to_i)
-      end
-      if auto_defrag_step_unit = options[:auto_defrag_step_unit]
-        try(:dfunit, auto_defrag_step_unit.to_i)
+      { :rcnum  => :setcache,
+        :xmsiz  => :setxmsiz,
+        :dfunit => :setdfunit }.each do |option, func|
+        if i = options[option]
+          try(func, i.to_i)
+        end
       end
       
       warn "mode option supersedes mode argument" if mode and options[:mode]
-      mode = options.fetch(:mode, mode || "wc")
-      unless mode.is_a? Integer
-        mode = mode.to_s.downcase.scan(/./m).inject(0) do |int, m|
-          case m
-          when "r"      then int | C::MODES[:HDBOREADER]
-          when "w"      then int | C::MODES[:HDBOWRITER]
-          when "c"      then int | C::MODES[:HDBOCREAT]
-          when "t"      then int | C::MODES[:HDBOTRUNC]
-          when "e", "n" then int | C::MODES[:HDBONOLCK]
-          when "f", "b" then int | C::MODES[:HDBOLCKNB]
-          when "s"      then int | C::MODES[:HDBOTSYNC]
-          else
-            warn "skipping unrecognized mode"
-            int
-          end
-        end
-      end
-      try(:open, path, mode)
+      try(:open, path, to_enum_int(options.fetch(:mode, mode || "wc"), :mode))
     end
     
     def optimize(options)
-      bnum = options.fetch(:bucket_array_size,       0).to_i
-      apow = options.fetch(:record_alignment_power, -1).to_i
-      fpow = options.fetch(:max_free_block_power,   -1).to_i
-      opts = options.fetch(:options,                 0xFF)
-      unless opts.is_a? Integer
-        opts = opts.to_s.downcase.scan(/./m).inject(0) do |int, o|
-          case o
-          when "l" then int | C::OPTS[:HDBTLARGE]
-          when "d" then int | C::OPTS[:HDBTDEFLATE]
-          when "b" then int | C::OPTS[:HDBTBZIP]
-          when "t" then int | C::OPTS[:HDBTTCBS]
-          else
-            warn "skipping unrecognized option"
-            int
-          end
-        end
-      end
-      func = options[:tune] ? :tune : :optimize
-      try(func, bnum, apow, fpow, opts)
+      try( options[:tune] ? :tune : :optimize,
+           options.fetch(:bnum,  0).to_i,
+           options.fetch(:apow, -1).to_i,
+           options.fetch(:fpow, -1).to_i,
+           to_enum_int(options.fetch(:opts, 0xFF), :option) )
     end
     
     attr_reader :path
@@ -336,6 +315,19 @@ module OklahomaMixer
         end
       else
         result
+      end
+    end
+    
+    def to_enum_int(str_or_int, name)
+      return str_or_int if str_or_int.is_a? Integer
+      enum = self.class.const_get("#{name.to_s.upcase}S")
+      str_or_int.to_s.downcase.scan(/./m).inject(0) do |int, c|
+        if i = enum[c]
+          int | i
+        else
+          warn "skipping unrecognized #{name}"
+          int
+        end
       end
     end
   end
