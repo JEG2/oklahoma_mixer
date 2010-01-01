@@ -1,5 +1,5 @@
 module OklahomaMixer
-  class ArrayList
+  class ArrayList  # :nodoc:
     def initialize(pointer = C.new)
       @pointer = pointer
     end

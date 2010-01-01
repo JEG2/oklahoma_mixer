@@ -1,0 +1,7 @@
+= Change Log
+
+Below is a complete listing of changes for each revision of Oklahoma Mixer.
+
+== 0.1.0
+
+* Initial public release with Hash Database support

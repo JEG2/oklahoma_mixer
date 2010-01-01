@@ -1,6 +1,6 @@
 module OklahomaMixer
-  module Utilities
-    module FFIDSL
+  module Utilities  # :nodoc:
+    module FFIDSL   # :nodoc:
       def self.extended(ffi_interface)
         ffi_interface.extend(FFI::Library)
         ffi_interface.ffi_lib(

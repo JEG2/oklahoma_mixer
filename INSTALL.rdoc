@@ -1,0 +1,22 @@
+= Installing Oklahoma Mixer
+
+RubyGems is the preferred install method for Oklahoma Mixer.
+
+== Installing the Gem
+
+Oklahoma Mixer is intended to be installed via the
+RubyGems[http://rubyforge.org/projects/rubygems/] system.  To get the latest
+version, simply enter the following into your command prompt:
+
+	$ sudo gem install oklahoma_mixer
+
+You must have RubyGems[http://rubyforge.org/projects/rubygems/] installed for
+the above to work.
+
+== Running the Tests
+
+If you would like to run Oklahoma Mixer's test suite on your system and you have
+Rake installed, just issue the following command from the root of the project
+directory:
+
+  $ rake

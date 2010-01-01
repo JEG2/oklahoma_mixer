@@ -1,5 +1,5 @@
 module OklahomaMixer
-  class ExtensibleString
+  class ExtensibleString  # :nodoc:
     def initialize(pointer = C.new)
       @pointer = pointer
     end

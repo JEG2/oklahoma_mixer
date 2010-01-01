@@ -1,6 +1,6 @@
 module OklahomaMixer
   class HashDatabase
-    module C
+    module C  # :nodoc:
       extend OklahomaMixer::Utilities::FFIDSL
 
       MODES = enum :HDBOREADER,  1 << 0,

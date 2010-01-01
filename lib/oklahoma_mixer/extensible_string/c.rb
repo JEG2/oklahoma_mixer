@@ -1,6 +1,6 @@
 module OklahomaMixer
   class ExtensibleString
-    module C
+    module C  # :nodoc:
       extend OklahomaMixer::Utilities::FFIDSL
 
       prefix :tcxstr
