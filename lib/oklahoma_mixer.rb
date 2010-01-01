@@ -12,6 +12,8 @@ require "oklahoma_mixer/hash_database/c"
 require "oklahoma_mixer/hash_database"
 
 module OklahomaMixer
+  VERSION = "0.1.0"
+  
   def self.open(path, *args)
     db = case File.extname(path).downcase
          when ".tch" then HashDatabase.new(path, *args)

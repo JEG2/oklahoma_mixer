@@ -5,8 +5,8 @@ class TestTopLevelInterface < Test::Unit::TestCase
     remove_db_files
   end
   
-  def test_ok_mixer_is_a_shortcut_for_oklahoma_mixer
-    assert_same(OklahomaMixer, OKMixer)
+  def test_the_version_constant_contains_the_current_version_number
+    assert_match(/\A\d\.\d\.\d\z/, OKMixer::VERSION)
   end
   
   def test_open_of_a_tch_extension_file_creates_a_hash_database
@@ -39,5 +39,9 @@ class TestTopLevelInterface < Test::Unit::TestCase
     assert_nil(db[:unset])  # we can fetch a value since it's still open
   ensure
     db.close if db
+  end
+  
+  def test_ok_mixer_is_a_shortcut_for_oklahoma_mixer
+    assert_same(OklahomaMixer, OKMixer)
   end
 end
