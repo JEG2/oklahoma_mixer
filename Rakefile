@@ -44,7 +44,8 @@ spec = Gem::Specification.new do |spec|
 	spec.rdoc_options     << "--title" << "Oklahoma Mixer Documentation" <<
 	                         "--main"  << "README.rdoc"
 
-	spec.require_path = "lib"
+	spec.add_dependency("ffi", ">= 0.5.4")
+	spec.add_development_dependency("rake")
 
 	spec.author      = "James Edward Gray II"
 	spec.email       = "james@graysoftinc.com"
