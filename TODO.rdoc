@@ -7,6 +7,7 @@ intend to address them.
 2. Add support for B+Tree and Fixed-length Databases
 3. Add support for Table Databases
 4. Ensure Ruby 1.9 compatibility
-5. Add support for Tokyo Tyrant
-6. Add support for Tokyo Dystopia
-7. Include some higher level abstractions like mixed tables, queues, and shards
+5. Write API documentation
+6. Add support for Tokyo Tyrant
+7. Add support for Tokyo Dystopia
+8. Include some higher level abstractions like mixed tables, queues, and shards
