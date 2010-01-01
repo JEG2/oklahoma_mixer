@@ -3,10 +3,6 @@ module OklahomaMixer
     module C
       extend OklahomaMixer::Utilities::FFIDSL
 
-      OPTS  = enum :HDBTLARGE,   1 << 0,
-                   :HDBTDEFLATE, 1 << 1,
-                   :HDBTBZIP,    1 << 2,
-                   :HDBTTCBS,    1 << 3
       MODES = enum :HDBOREADER,  1 << 0,
                    :HDBOWRITER,  1 << 1,
                    :HDBOCREAT,   1 << 2,
@@ -14,7 +10,10 @@ module OklahomaMixer
                    :HDBONOLCK,   1 << 4,
                    :HDBOLCKNB,   1 << 5,
                    :HDBOTSYNC,   1 << 6
-      
+      OPTS  = enum :HDBTLARGE,   1 << 0,
+                   :HDBTDEFLATE, 1 << 1,
+                   :HDBTBZIP,    1 << 2,
+                   :HDBTTCBS,    1 << 3
       
       prefix :tchdb
       

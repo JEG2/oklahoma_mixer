@@ -4,17 +4,17 @@ module OklahomaMixer
     ### Constants ###
     #################
     
-    MODES   = { "r" => C::MODES[:HDBOREADER],
-                "w" => C::MODES[:HDBOWRITER],
-                "c" => C::MODES[:HDBOCREAT],
-                "t" => C::MODES[:HDBOTRUNC],
-                "e" => C::MODES[:HDBONOLCK],
-                "f" => C::MODES[:HDBOLCKNB],
-                "s" => C::MODES[:HDBOTSYNC] }
-    OPTIONS = { "l" => C::OPTS[:HDBTLARGE],
-                "d" => C::OPTS[:HDBTDEFLATE],
-                "b" => C::OPTS[:HDBTBZIP],
-                "t" => C::OPTS[:HDBTTCBS] }
+    MODES = { "r" => :HDBOREADER,
+              "w" => :HDBOWRITER,
+              "c" => :HDBOCREAT,
+              "t" => :HDBOTRUNC,
+              "e" => :HDBONOLCK,
+              "f" => :HDBOLCKNB,
+              "s" => :HDBOTSYNC }
+    OPTS  = { "l" => :HDBTLARGE,
+              "d" => :HDBTDEFLATE,
+              "b" => :HDBTBZIP,
+              "t" => :HDBTTCBS }
     
     ###################
     ### File System ###
@@ -34,11 +34,9 @@ module OklahomaMixer
       if options.values_at(:bnum, :apow, :fpow, :opts).any?
         optimize(options.merge(:tune => true))
       end
-      { :rcnum  => :setcache,
-        :xmsiz  => :setxmsiz,
-        :dfunit => :setdfunit }.each do |option, func|
+      {:rcnum => :cache, :xmsiz => nil, :dfunit => nil}.each do |option, func|
         if i = options[option]
-          try(func, i.to_i)
+          try("set#{func || option}", i.to_i)
         end
       end
       
@@ -51,7 +49,7 @@ module OklahomaMixer
            options.fetch(:bnum,  0).to_i,
            options.fetch(:apow, -1).to_i,
            options.fetch(:fpow, -1).to_i,
-           to_enum_int(options.fetch(:opts, 0xFF), :option) )
+           to_enum_int(options.fetch(:opts, 0xFF), :opt) )
     end
     
     attr_reader :path
@@ -321,10 +319,12 @@ module OklahomaMixer
     
     def to_enum_int(str_or_int, name)
       return str_or_int if str_or_int.is_a? Integer
-      enum = self.class.const_get("#{name.to_s.upcase}S")
+      const = "#{name.to_s.upcase}S"
+      names = self.class.const_get(const)
+      enum  = C.const_get(const)
       str_or_int.to_s.downcase.scan(/./m).inject(0) do |int, c|
-        if i = enum[c]
-          int | i
+        if n = names[c]
+          int | enum[n]
         else
           warn "skipping unrecognized #{name}"
           int
