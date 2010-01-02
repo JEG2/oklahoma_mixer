@@ -4,17 +4,17 @@ module OklahomaMixer
     ### Constants ###
     #################
     
-    MODES = { "r" => :HDBOREADER,
-              "w" => :HDBOWRITER,
-              "c" => :HDBOCREAT,
-              "t" => :HDBOTRUNC,
-              "e" => :HDBONOLCK,
-              "f" => :HDBOLCKNB,
-              "s" => :HDBOTSYNC }
-    OPTS  = { "l" => :HDBTLARGE,
-              "d" => :HDBTDEFLATE,
-              "b" => :HDBTBZIP,
-              "t" => :HDBTTCBS }
+    MODES = { "r" => :OREADER,
+              "w" => :OWRITER,
+              "c" => :OCREAT,
+              "t" => :OTRUNC,
+              "e" => :ONOLCK,
+              "f" => :OLCKNB,
+              "s" => :OTSYNC }
+    OPTS  = { "l" => :TLARGE,
+              "d" => :TDEFLATE,
+              "b" => :TBZIP,
+              "t" => :TTCBS }
     
     ###################
     ### File System ###
@@ -24,7 +24,7 @@ module OklahomaMixer
       options              = args.last.is_a?(Hash)   ? args.last  : { }
       mode                 = !args.first.is_a?(Hash) ? args.first : nil
       @path                = path
-      @db                  = C.new
+      @db                  = lib.new
       self.default         = options[:default]
       @in_transaction      = false
       @abort               = false
@@ -55,7 +55,7 @@ module OklahomaMixer
     attr_reader :path
     
     def file_size
-      C.fsiz(@db)
+      lib.fsiz(@db)
     end
     
     def flush
@@ -106,15 +106,14 @@ module OklahomaMixer
         }
         try(:putproc, k, k.size, v, v.size, callback, nil)
       else
-        case mode
-        when :keep
+        if mode == :keep
           result = try( :putkeep, k, k.size, v, v.size,
                         :no_error => {21 => false} )
-        when :cat
+        elsif mode == :cat
           try(:putcat, k, k.size, v, v.size)
-        when :async
+        elsif mode == :async and self.class == HashDatabase
           try(:putasync, k, k.size, v, v.size)
-        when :add
+        elsif mode == :add
           result = case value
                    when Float then try( :adddouble, k, k.size, value,
                                         :failure => lambda { |n| n.nan? } )
@@ -122,6 +121,7 @@ module OklahomaMixer
                                         :failure => Utilities::INT_MIN )
                    end
         else
+          warn "unsupported mode for database type" if mode
           try(:put, k, k.size, v, v.size)
         end
       end
@@ -166,7 +166,7 @@ module OklahomaMixer
     def keys(options = { })
       prefix = options.fetch(:prefix, "").to_s
       limit  = options.fetch(:limit,  -1)
-      list   = ArrayList.new(C.fwmkeys(@db, prefix, prefix.size, limit))
+      list   = ArrayList.new(lib.fwmkeys(@db, prefix, prefix.size, limit))
       list.to_a
     ensure
       list.free if list
@@ -205,7 +205,7 @@ module OklahomaMixer
     alias_method :member?,  :include?
     
     def size
-      C.rnum(@db)
+      lib.rnum(@db)
     end
     alias_method :length, :size
     
@@ -296,21 +296,26 @@ module OklahomaMixer
     #######
     private
     #######
+
+    def lib
+      @c ||= self.class.const_get(:C)
+    end
     
     def try(func, *args)
       options  = args.last.is_a?(Hash) ? args.pop : { }
       failure  = options.fetch(:failure, false)
       no_error = options.fetch(:no_error, { })
       result   = func == :read_from_func                      ?
-                 C.read_from_func(args[0], @db, *args[1..-1]) :
-                 C.send(func, @db, *args)
+                 lib.read_from_func(args[0], @db, *args[1..-1]) :
+                 lib.send(func, @db, *args)
       if (failure.is_a?(Proc) and failure[result]) or result == failure
-        error_code = C.ecode(@db)
+        error_code = lib.ecode(@db)
         if no_error.include? error_code
           no_error[error_code]
         else
-          error_message = C.errmsg(error_code)
-          fail Error::CabinetError, "#{error_message} (#{error_code})"
+          error_message = lib.errmsg(error_code)
+          fail Error::CabinetError,
+               "#{error_message} (error code #{error_code})"
         end
       else
         result
@@ -321,10 +326,10 @@ module OklahomaMixer
       return str_or_int if str_or_int.is_a? Integer
       const = "#{name.to_s.upcase}S"
       names = self.class.const_get(const)
-      enum  = C.const_get(const)
+      enum  = lib.const_get(const)
       str_or_int.to_s.downcase.scan(/./m).inject(0) do |int, c|
         if n = names[c]
-          int | enum[n]
+          int | enum["#{self.class.to_s[/([HBFT])\w+\z/, 1]}DB#{n}".to_sym]
         else
           warn "skipping unrecognized #{name}"
           int

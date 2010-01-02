@@ -29,17 +29,12 @@ module TestHelper
                "#{self.class.to_s.sub(/\ATest/, '').downcase}.#{ext}" )
   end
 
-  def hdb(*args)
-    db = OKMixer::HashDatabase.new(db_path("tch"), *args)
-    if block_given?
-      begin
-        yield db
-      ensure
-        db.close
-      end
-    else
-      db
-    end
+  def hdb(*args, &block)
+    OKMixer.open(db_path("tch"), *args, &block)
+  end
+
+  def bdb(*args, &block)
+    OKMixer.open(db_path("tcb"), *args, &block)
   end
   
   def remove_db_files

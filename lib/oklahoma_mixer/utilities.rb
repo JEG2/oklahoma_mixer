@@ -22,6 +22,12 @@ module OklahomaMixer
         defined?(@prefix) and @prefix
       end
       
+      def const(name, values)
+        const_set( name, enum( *(0...values.size).map { |i|
+          ["#{prefix.to_s[2..-1].upcase}#{values[i]}".to_sym, 1 << i]
+        }.flatten ) )
+      end
+      
       def func(details)
         args =  [ ]
         args << details.fetch(:alias, details[:name])
@@ -57,12 +63,102 @@ module OklahomaMixer
         func :name    => :del,
              :args    => :pointer
       end
+      
+      def def_hash_consts_and_funcs
+        const :MODES, %w[OREADER OWRITER OCREAT OTRUNC ONOLCK OLCKNB OTSYNC]
+        const :OPTS,  %w[TLARGE TDEFLATE TBZIP TTCBS]
+
+        def_new_and_del_funcs
+        func :name    => :open,
+             :args    => [:pointer, :string, const_get(:MODES)],
+             :returns => :bool
+        func :name    => :sync,
+             :args    => :pointer,
+             :returns => :bool
+        func :name    => :fsiz,
+             :args    => :pointer,
+             :returns => :uint64
+        func :name    => :copy,
+             :args    => [:pointer, :string],
+             :returns => :bool
+        func :name    => :defrag,
+             :args    => [:pointer, :int64],
+             :returns => :bool
+
+        func :name    => :ecode,
+             :args    => :pointer,
+             :returns => :int
+        func :name    => :errmsg,
+             :args    => :int,
+             :returns => :string
+
+        func :name    => :setmutex,
+             :args    => :pointer,
+             :returns => :bool
+        func :name    => :setxmsiz,
+             :args    => [:pointer, :int64],
+             :returns => :bool
+        func :name    => :setdfunit,
+             :args    => [:pointer, :int32],
+             :returns => :bool
+
+        func :name    => :put,
+             :args    => [:pointer, :pointer, :int, :pointer, :int],
+             :returns => :bool
+        func :name    => :putkeep,
+             :args    => [:pointer, :pointer, :int, :pointer, :int],
+             :returns => :bool
+        func :name    => :putcat,
+             :args    => [:pointer, :pointer, :int, :pointer, :int],
+             :returns => :bool
+        call :name    => :TCPDPROC,
+             :args    => [:pointer, :int, :pointer, :pointer],
+             :returns => :pointer
+        func :name    => :putproc,
+             :args    => [:pointer, :pointer, :int, :pointer, :int, :TCPDPROC,
+                          :pointer],
+             :returns => :bool
+        func :name    => :addint,
+             :args    => [:pointer, :pointer, :int, :int],
+             :returns => :int
+        func :name    => :adddouble,
+             :args    => [:pointer, :pointer, :int, :double],
+             :returns => :double
+        func :name    => :out,
+             :args    => [:pointer, :pointer, :int],
+             :returns => :bool
+        func :name    => :get,
+             :args    => [:pointer, :pointer, :int, :pointer],
+             :returns => :pointer
+        func :name    => :vanish,
+             :args    => :pointer,
+             :returns => :bool
+        func :name    => :vanish,
+             :args    => :pointer,
+             :returns => :bool
+        func :name    => :fwmkeys,
+             :args    => [:pointer, :pointer, :int, :int],
+             :returns => :pointer
+        func :name    => :rnum,
+             :args    => :pointer,
+             :returns => :uint64
+
+        func :name    => :tranbegin,
+             :args    => :pointer,
+             :returns => :bool
+        func :name    => :trancommit,
+             :args    => :pointer,
+             :returns => :bool
+        func :name    => :tranabort,
+             :args    => :pointer,
+             :returns => :bool
+      end
     end
     
-    int_min = `getconf INT_MIN 2>&1`[/-\d+/]
-    unless INT_MIN = int_min && int_min.to_i
+    unless int_min = `getconf INT_MIN 2>&1`[/-\d+/]
       warn "set OKMixer::Utilities::INT_MIN before using counters"
     end
+    INT_MIN = int_min && int_min.to_i
     
     def self.temp_int
       int = FFI::MemoryPointer.new(:int)

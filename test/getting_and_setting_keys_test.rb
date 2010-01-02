@@ -68,7 +68,7 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
     assert_equal(1, @db.store(:i,  1, :add))
     assert_equal(2, @db.store(:i,  1, :add))
     assert_equal(1, @db.store(:i, -1, :add))
-
+    
     assert_in_delta(1.5, @db.store(:f,  1.5, :add), 2 ** -20)
     assert_in_delta(3.5, @db.store(:f,  2.0, :add), 2 ** -20)
     assert_in_delta(2.5, @db.store(:f, -1.0, :add), 2 ** -20)
@@ -86,6 +86,22 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
       assert_equal(:new, @db.store(:key, :new, :async) { |key, old, new| })
     end
     assert(!warning.empty?, "A warning was not issued for a mode and block")
+  end
+  
+  def test_storing_with_a_mode_not_supported_by_the_database_triggers_a_warning
+    warning = capture_stderr do
+      assert_equal(:one, @db.store(:dups, :one, :dup))  # normal store
+    end
+    assert(!warning.empty?, "A warning was not issued for an unsupported mode")
+    assert_equal("one", @db[:dups])
+    
+    bdb do |db|
+      warning = capture_stderr do
+        assert_equal(:value, db.store(:key, :value, :async))  # normal store
+      end
+      assert(!warning.empty?, "A warning was not issued for an unsupported mode")
+      assert_equal("value", db[:key])
+    end
   end
   
   def test_store_and_fetch_can_also_be_used_through_the_indexing_brackets
