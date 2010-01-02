@@ -80,13 +80,20 @@ module SharedIteration
     assert_equal(Hash[*@keys.zip(@values).flatten], @db.to_hash)
   end
   
-  def test_to_hash_keeps_a_default_object
+  def test_to_hash_keeps_a_default_object_by_default
     @db.default = 0
     assert_equal(0, @db.to_hash[:missing])
   end
   
-  def test_to_hash_keeps_a_default_proc
+  def test_to_hash_keeps_a_default_proc_by_default
     @db.default = lambda { |key| "is #{key}" }
     assert_equal("is missing", @db.to_hash[:missing])
+  end
+  
+  def test_to_hash_can_be_told_to_ignore_a_default
+    @db.default = 0
+    assert_nil(@db.to_hash(false)[:missing])
+    @db.default = lambda { |key| "is #{key}" }
+    assert_nil(@db.to_hash(false)[:missing])
   end
 end

@@ -251,8 +251,8 @@ module OklahomaMixer
       end
     end
     
-    def to_hash
-      default = @default && lambda { |hash, key| @default[key] }
+    def to_hash(set_default = true)
+      default = @default && lambda { |hash, key| @default[key] } if set_default
       hash    = Hash.new(&default)
       each do |key, value|
         hash[key] ||= value
