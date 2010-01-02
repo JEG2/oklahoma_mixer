@@ -251,6 +251,15 @@ module OklahomaMixer
       end
     end
     
+    def to_hash
+      default = @default && lambda { |hash, key| @default[key] }
+      hash    = Hash.new(&default)
+      each do |key, value|
+        hash[key] ||= value
+      end
+      hash
+    end
+    
     ####################
     ### Transactions ###
     ####################
