@@ -1,11 +1,12 @@
 module OklahomaMixer
   class Cursor  # :nodoc:
-    def initialize(b_tree_pointer, start = nil)
+    def initialize(b_tree_pointer, start = nil, reverse = false)
       @pointer = C.new(b_tree_pointer)
+      @reverse = reverse
       if start
         C.jump(@pointer, start, start.size)
       else
-        C.first(@pointer)
+        C.send(@reverse ? :last : :first, @pointer)
       end
     end
     
@@ -28,7 +29,7 @@ module OklahomaMixer
     end
     
     def next
-      C.next(@pointer)
+      C.send(@reverse ? :prev : :next, @pointer)
     end
     
     def delete

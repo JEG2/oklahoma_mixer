@@ -7,15 +7,21 @@ module OklahomaMixer
       
       def_hash_consts_and_funcs
 
-      # func :name    => :tune,
-      #      :args    => [:pointer, :int64, :int8, :int8, OPTS],
-      #      :returns => :bool
-      # func :name    => :setcache,
-      #      :args    => [:pointer, :int32],
-      #      :returns => :bool
-      # func :name    => :optimize,
-      #      :args    => [:pointer, :int64, :int8, :int8, OPTS],
-      #      :returns => :bool
+      call :name    => :TCCMP,
+           :args    => [:pointer, :int, :pointer, :int, :pointer],
+           :returns => :int
+      func :name    => :setcmpfunc,
+           :args    => [:pointer, :TCCMP, :pointer],
+           :returns => :bool
+      func :name    => :tune,
+           :args    => [:pointer, :int32, :int32, :int64, :int8, :int8, OPTS],
+           :returns => :bool
+      func :name    => :setcache,
+           :args    => [:pointer, :int32, :int32],
+           :returns => :bool
+      func :name    => :optimize,
+           :args    => [:pointer, :int32, :int32, :int64, :int8, :int8, OPTS],
+           :returns => :bool
     end
   end
 end

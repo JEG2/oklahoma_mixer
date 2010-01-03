@@ -14,10 +14,16 @@ module OklahomaMixer
       func :name    => :first,
            :args    => :pointer,
            :returns => :bool
+      func :name    => :last,
+           :args    => :pointer,
+           :returns => :bool
       func :name    => :jump,
            :args    => [:pointer, :pointer, :int],
            :returns => :bool
       func :name    => :next,
+           :args    => :pointer,
+           :returns => :bool
+      func :name    => :prev,
            :args    => :pointer,
            :returns => :bool
 

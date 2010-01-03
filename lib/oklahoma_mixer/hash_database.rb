@@ -31,14 +31,7 @@ module OklahomaMixer
       @nested_transactions = options[:nested_transactions]
       
       try(:setmutex) if options[:mutex]
-      if options.values_at(:bnum, :apow, :fpow, :opts).any?
-        optimize(options.merge(:tune => true))
-      end
-      {:rcnum => :cache, :xmsiz => nil, :dfunit => nil}.each do |option, func|
-        if i = options[option]
-          try("set#{func || option}", i.to_i)
-        end
-      end
+      tune(options)
       
       warn "mode option supersedes mode argument" if mode and options[:mode]
       try(:open, path, to_enum_int(options.fetch(:mode, mode || "wc"), :mode))
@@ -342,6 +335,19 @@ module OklahomaMixer
         else
           warn "skipping unrecognized #{name}"
           int
+        end
+      end
+    end
+    
+    def tune(options)
+      if self.class == HashDatabase and
+         options.values_at(:bnum, :apow, :fpow, :opts).any?
+        optimize(options.merge(:tune => true))
+      end
+      {:rcnum => :cache, :xmsiz => nil, :dfunit => nil}.each do |option, func|
+        next if func == :cache and self.class != HashDatabase
+        if i = options[option]
+          try("set#{func || option}", i.to_i)
         end
       end
     end
