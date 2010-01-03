@@ -16,7 +16,7 @@ require "oklahoma_mixer/b_tree_database/c"
 require "oklahoma_mixer/b_tree_database"
 
 module OklahomaMixer
-  VERSION = "0.1.0"
+  VERSION = "0.2.0"
   
   def self.open(path, *args)
     db_class = case File.extname(path).downcase
