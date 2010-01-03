@@ -1,5 +1,19 @@
 module OklahomaMixer
   class BTreeDatabase < HashDatabase
+    ###################
+    ### File System ###
+    ###################
+    
+    def optimize(options)
+      try( options[:tune] ? :tune : :optimize,
+           options.fetch(:lmemb,  0).to_i,
+           options.fetch(:nmemb,  0).to_i,
+           options.fetch(:bnum,   0).to_i,
+           options.fetch(:apow,  -1).to_i,
+           options.fetch(:fpow,  -1).to_i,
+           to_enum_int(options.fetch(:opts, 0xFF), :opt) )
+    end
+    
     #################
     ### Iteration ###
     #################
@@ -56,6 +70,18 @@ module OklahomaMixer
         }
         try(:setcmpfunc, callback, nil)
       end
+      if options.values_at(:lmemb, :nmemb, :bnum, :apow, :fpow, :opts).any?
+        optimize(options.merge(:tune => true))
+      end
+      if options.values_at(:lcnum, :ncnum).any?
+        setcache(options)
+      end
+    end
+    
+    def setcache(options)
+      try( :setcache,
+           options.fetch(:lcnum, 0).to_i,
+           options.fetch(:ncnum, 0).to_i )
     end
     
     def cursor(start = nil, reverse = false)
