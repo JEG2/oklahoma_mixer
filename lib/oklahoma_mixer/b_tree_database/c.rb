@@ -22,6 +22,11 @@ module OklahomaMixer
       func :name    => :optimize,
            :args    => [:pointer, :int32, :int32, :int64, :int8, :int8, OPTS],
            :returns => :bool
+
+      func :name    => :range,
+           :args    => [:pointer, :pointer, :int, :bool, :pointer, :int, :bool,
+                        :int],
+           :returns => :pointer
     end
   end
 end

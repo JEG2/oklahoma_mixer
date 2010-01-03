@@ -14,6 +14,34 @@ module OklahomaMixer
            to_enum_int(options.fetch(:opts, 0xFF), :opt) )
     end
     
+    ################################
+    ### Getting and Setting Keys ###
+    ################################
+    
+    def keys(options = { })
+      if options.include? :range
+        warn "range supersedes prefix" if options[:prefix]
+        range = options[:range]
+        fail ArgumentError, "Range expected" unless range.is_a? Range
+        start          = range.first.to_s
+        include_start  = !options.fetch(:exclude_start, false)
+        finish         = range.last.to_s
+        include_finish = !range.exclude_end?
+        limit          = options.fetch(:limit, -1)
+        begin
+          list = ArrayList.new( lib.range( @db,
+                                           start,  start.size,  include_start,
+                                           finish, finish.size, include_finish,
+                                           limit ) )
+          list.to_a
+        ensure
+          list.free if list
+        end
+      else
+        super
+      end
+    end
+    
     #################
     ### Iteration ###
     #################
