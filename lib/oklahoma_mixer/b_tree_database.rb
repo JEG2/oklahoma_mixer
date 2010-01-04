@@ -17,6 +17,16 @@ module OklahomaMixer
     ################################
     ### Getting and Setting Keys ###
     ################################
+
+    def store(key, value, mode = nil)
+      if mode == :dup
+        k, v = key.to_s, value.to_s
+        try(:putdup, k, k.size, v, v.size)
+        value
+      else
+        super
+      end
+    end
     
     def keys(options = { })
       if options.include? :range
@@ -41,6 +51,51 @@ module OklahomaMixer
         super
       end
     end
+
+    def values(key = nil)
+      if key.nil?
+        super()
+      else
+        k = key.to_s
+        begin
+          pointer = try( :get4, k, k.size,
+                         :failure  => lambda { |ptr| ptr.address.zero? },
+                         :no_error => {22 => nil} )
+          if pointer.nil?
+            [ ]
+          else
+            list = ArrayList.new(pointer)
+            list.to_a
+          end
+        ensure
+          list.free if list
+        end
+      end
+    end
+    
+    def delete(key, mode = nil, &missing_handler)
+      if mode == :dup
+        values = values(key)
+        k      = key.to_s
+        if try(:out3, k, k.size, :no_error => {22 => false})
+          values
+        else
+          missing_handler ? missing_handler[key] : values
+        end
+      else
+        super(key, &missing_handler)
+      end
+    end
+
+    def size(key = nil)
+      if key.nil?
+        super()
+      else
+        k = key.to_s
+        try(:vnum, k, k.size, :failure => 0, :no_error => {22 => 0})
+      end
+    end
+    alias_method :length, :size
     
     #################
     ### Iteration ###

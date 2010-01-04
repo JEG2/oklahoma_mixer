@@ -310,7 +310,7 @@ module OklahomaMixer
       result   = func == :read_from_func                      ?
                  lib.read_from_func(args[0], @db, *args[1..-1]) :
                  lib.send(func, @db, *args)
-      if (failure.is_a?(Proc) and failure[result]) or result == failure
+      if failure.is_a?(Proc) ? failure[result] : result == failure
         error_code = lib.ecode(@db)
         if no_error.include? error_code
           no_error[error_code]
