@@ -178,7 +178,10 @@ module OklahomaMixer
     
     prefix :tc
     
-    func :name => :free,
-         :args => :pointer
+    func :name    => :malloc,
+         :args    => :ulong,
+         :returns => :pointer
+    func :name    => :free,
+         :args    => :pointer
   end
 end

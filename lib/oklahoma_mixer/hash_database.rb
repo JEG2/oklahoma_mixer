@@ -35,6 +35,9 @@ module OklahomaMixer
       
       warn "mode option supersedes mode argument" if mode and options[:mode]
       try(:open, path, to_enum_int(options.fetch(:mode, mode || "wc"), :mode))
+    rescue Exception
+      close if @db
+      raise
     end
     
     def optimize(options)
@@ -95,7 +98,9 @@ module OklahomaMixer
           old_value   = old_value_pointer.get_bytes(0, old_size)
           replacement = yield(key, old_value, value).to_s
           returned_size.put_int(0, replacement.size)
-          FFI::MemoryPointer.from_string(replacement)
+          pointer = Utilities.malloc(replacement.size)
+          pointer.put_bytes(0, replacement) unless pointer.address.zero?
+          pointer
         }
         try(:putproc, k, k.size, v, v.size, callback, nil)
       else
