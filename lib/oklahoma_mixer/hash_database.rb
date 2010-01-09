@@ -36,7 +36,7 @@ module OklahomaMixer
       warn "mode option supersedes mode argument" if mode and options[:mode]
       try(:open, path, to_enum_int(options.fetch(:mode, mode || "wc"), :mode))
     rescue Exception
-      close if @db
+      close if defined?(@db) and @db
       raise
     end
     
