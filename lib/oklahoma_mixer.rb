@@ -18,7 +18,7 @@ require "oklahoma_mixer/fixed_length_database/c"
 require "oklahoma_mixer/fixed_length_database"
 
 module OklahomaMixer
-  VERSION = "0.2.0"
+  VERSION = "0.3.0"
   
   def self.open(path, *args)
     db_class = case File.extname(path).downcase
