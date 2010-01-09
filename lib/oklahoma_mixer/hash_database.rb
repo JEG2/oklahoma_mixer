@@ -90,37 +90,37 @@ module OklahomaMixer
     end
     
     def store(key, value, mode = nil)
-      k, v   = key.to_s, value.to_s
+      k      = cast_key_in(key)
+      v      = cast_value_in(value) unless mode == :add and not block_given?
       result = value
       if block_given?
         warn "block supersedes mode argument" unless mode.nil?
         callback = lambda { |old_value_pointer, old_size, returned_size, _|
-          old_value   = old_value_pointer.get_bytes(0, old_size)
-          replacement = yield(key, old_value, value).to_s
-          returned_size.put_int(0, replacement.size)
-          pointer = Utilities.malloc(replacement.size)
+          old_value         = old_value_pointer.get_bytes(0, old_size)
+          replacement, size = cast_value_in(yield(key, old_value, value))
+          returned_size.put_int(0, size)
+          pointer = Utilities.malloc(size)
           pointer.put_bytes(0, replacement) unless pointer.address.zero?
           pointer
         }
-        try(:putproc, k, k.size, v, v.size, callback, nil)
+        try(:putproc, k, v, callback, nil)
       else
         if mode == :keep
-          result = try( :putkeep, k, k.size, v, v.size,
-                        :no_error => {21 => false} )
+          result = try(:putkeep, k, v, :no_error => {21 => false})
         elsif mode == :cat
-          try(:putcat, k, k.size, v, v.size)
+          try(:putcat, k, v)
         elsif mode == :async and self.class == HashDatabase
-          try(:putasync, k, k.size, v, v.size)
+          try(:putasync, k, v)
         elsif mode == :add
           result = case value
-                   when Float then try( :adddouble, k, k.size, value,
+                   when Float then try( :adddouble, k, value,
                                         :failure => lambda { |n| n.nan? } )
-                   else            try( :addint, k, k.size, value.to_i,
+                   else            try( :addint, k, value.to_i,
                                         :failure => Utilities::INT_MIN )
                    end
         else
           warn "unsupported mode for database type" if mode
-          try(:put, k, k.size, v, v.size)
+          try(:put, k, v)
         end
       end
       result
@@ -128,8 +128,7 @@ module OklahomaMixer
     alias_method :[]=, :store
     
     def fetch(key, *default)
-      k        = key.to_s
-      if value = try( :read_from_func, :get, k, k.size,
+      if value = try( :read_from_func, :get, cast_key_in(key),
                       :failure => nil, :no_error => {22 => nil} )
         value
       else
@@ -180,8 +179,7 @@ module OklahomaMixer
     
     def delete(key, &missing_handler)
       value = fetch(key, &missing_handler)
-      k     = key.to_s
-      try(:out, k, k.size, :no_error => {22 => nil})
+      try(:out, cast_key_in(key), :no_error => {22 => nil})
       value
     rescue IndexError
       nil
@@ -312,9 +310,9 @@ module OklahomaMixer
       options  = args.last.is_a?(Hash) ? args.pop : { }
       failure  = options.fetch(:failure, false)
       no_error = options.fetch(:no_error, { })
-      result   = func == :read_from_func                      ?
-                 lib.read_from_func(args[0], @db, *args[1..-1]) :
-                 lib.send(func, @db, *args)
+      result   = func == :read_from_func                                ?
+                 lib.read_from_func(args[0], @db, *args[1..-1].flatten) :
+                 lib.send(func, @db, *args.flatten)
       if failure.is_a?(Proc) ? failure[result] : result == failure
         error_code = lib.ecode(@db)
         if no_error.include? error_code
@@ -356,5 +354,12 @@ module OklahomaMixer
         end
       end
     end
+    
+    def cast_to_bytes_and_length(object)
+      bytes = object.to_s
+      [bytes, bytes.length]
+    end
+    alias_method :cast_key_in,   :cast_to_bytes_and_length
+    alias_method :cast_value_in, :cast_to_bytes_and_length
   end
 end

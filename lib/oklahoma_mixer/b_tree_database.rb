@@ -20,8 +20,7 @@ module OklahomaMixer
 
     def store(key, value, mode = nil)
       if mode == :dup
-        k, v = key.to_s, value.to_s
-        try(:putdup, k, k.size, v, v.size)
+        try(:putdup, cast_key_in(key), cast_value_in(value))
         value
       else
         super
@@ -33,16 +32,16 @@ module OklahomaMixer
         warn "range supersedes prefix" if options[:prefix]
         range = options[:range]
         fail ArgumentError, "Range expected" unless range.is_a? Range
-        start          = range.first.to_s
+        start          = cast_key_in(range.first)
         include_start  = !options.fetch(:exclude_start, false)
-        finish         = range.last.to_s
+        finish         = cast_key_in(range.last)
         include_finish = !range.exclude_end?
         limit          = options.fetch(:limit, -1)
         begin
           list = ArrayList.new( lib.range( @db,
-                                           start,  start.size,  include_start,
-                                           finish, finish.size, include_finish,
-                                           limit ) )
+                                           *[ start,  include_start,
+                                              finish, include_finish,
+                                              limit ].flatten ) )
           list.to_a
         ensure
           list.free if list
@@ -56,9 +55,8 @@ module OklahomaMixer
       if key.nil?
         super()
       else
-        k = key.to_s
         begin
-          pointer = try( :get4, k, k.size,
+          pointer = try( :get4, cast_key_in(key),
                          :failure  => lambda { |ptr| ptr.address.zero? },
                          :no_error => {22 => nil} )
           if pointer.nil?
@@ -76,8 +74,7 @@ module OklahomaMixer
     def delete(key, mode = nil, &missing_handler)
       if mode == :dup
         values = values(key)
-        k      = key.to_s
-        if try(:out3, k, k.size, :no_error => {22 => false})
+        if try(:out3, cast_key_in(key), :no_error => {22 => false})
           values
         else
           missing_handler ? missing_handler[key] : values
@@ -91,8 +88,7 @@ module OklahomaMixer
       if key.nil?
         super()
       else
-        k = key.to_s
-        try(:vnum, k, k.size, :failure => 0, :no_error => {22 => 0})
+        try(:vnum, cast_key_in(key), :failure => 0, :no_error => {22 => 0})
       end
     end
     alias_method :length, :size
@@ -168,7 +164,7 @@ module OklahomaMixer
     end
     
     def cursor(start = nil, reverse = false)
-      cursor = Cursor.new(@db, start.nil? ? start : start.to_s, reverse)
+      cursor = Cursor.new(@db, start.nil? ? start : cast_key_in(start), reverse)
       yield cursor
       self
     ensure

@@ -4,7 +4,7 @@ module OklahomaMixer
       @pointer = C.new(b_tree_pointer)
       @reverse = reverse
       if start
-        C.jump(@pointer, start, start.size)
+        C.jump(@pointer, *start)
       else
         C.send(@reverse ? :last : :first, @pointer)
       end
