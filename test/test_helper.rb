@@ -36,6 +36,10 @@ module TestHelper
   def bdb(*args, &block)
     OKMixer.open(db_path("tcb"), *args, &block)
   end
+
+  def fdb(*args, &block)
+    OKMixer.open(db_path("tcf"), *args, &block)
+  end
   
   def remove_db_files
     Dir.glob(db_path("*")) do |file|

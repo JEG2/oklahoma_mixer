@@ -64,11 +64,11 @@ module OklahomaMixer
              :args    => :pointer
       end
       
-      def def_hash_consts_and_funcs
+      def def_core_database_consts_and_funcs
         const :MODES, %w[OREADER OWRITER OCREAT OTRUNC ONOLCK OLCKNB OTSYNC]
-        const :OPTS,  %w[TLARGE TDEFLATE TBZIP TTCBS]
 
         def_new_and_del_funcs
+        
         func :name    => :open,
              :args    => [:pointer, :string, const_get(:MODES)],
              :returns => :bool
@@ -81,9 +81,6 @@ module OklahomaMixer
         func :name    => :copy,
              :args    => [:pointer, :string],
              :returns => :bool
-        func :name    => :defrag,
-             :args    => [:pointer, :int64],
-             :returns => :bool
 
         func :name    => :ecode,
              :args    => :pointer,
@@ -95,6 +92,34 @@ module OklahomaMixer
         func :name    => :setmutex,
              :args    => :pointer,
              :returns => :bool
+
+        func :name    => :vanish,
+             :args    => :pointer,
+             :returns => :bool
+        func :name    => :rnum,
+             :args    => :pointer,
+             :returns => :uint64
+
+        func :name    => :tranbegin,
+             :args    => :pointer,
+             :returns => :bool
+        func :name    => :trancommit,
+             :args    => :pointer,
+             :returns => :bool
+        func :name    => :tranabort,
+             :args    => :pointer,
+             :returns => :bool
+      end
+      
+      def def_hash_database_consts_and_funcs
+        const :OPTS, %w[TLARGE TDEFLATE TBZIP TTCBS]
+
+        def_core_database_consts_and_funcs
+
+        func :name    => :defrag,
+             :args    => [:pointer, :int64],
+             :returns => :bool
+
         func :name    => :setxmsiz,
              :args    => [:pointer, :int64],
              :returns => :bool
@@ -130,33 +155,14 @@ module OklahomaMixer
         func :name    => :get,
              :args    => [:pointer, :pointer, :int, :pointer],
              :returns => :pointer
-        func :name    => :vanish,
-             :args    => :pointer,
-             :returns => :bool
-        func :name    => :vanish,
-             :args    => :pointer,
-             :returns => :bool
         func :name    => :fwmkeys,
              :args    => [:pointer, :pointer, :int, :int],
              :returns => :pointer
-        func :name    => :rnum,
-             :args    => :pointer,
-             :returns => :uint64
-
-        func :name    => :tranbegin,
-             :args    => :pointer,
-             :returns => :bool
-        func :name    => :trancommit,
-             :args    => :pointer,
-             :returns => :bool
-        func :name    => :tranabort,
-             :args    => :pointer,
-             :returns => :bool
       end
     end
     
     unless int_min = `getconf INT_MIN 2>&1`[/-\d+/]
-      warn "set OKMixer::Utilities::INT_MIN before using counters"
+      warn "set OKMixer::Utilities::INT_MIN before using the :add storage mode"
     end
     INT_MIN = int_min && int_min.to_i
     

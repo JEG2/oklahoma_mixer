@@ -5,7 +5,7 @@ module OklahomaMixer
 
       prefix :tchdb
       
-      def_hash_consts_and_funcs
+      def_hash_database_consts_and_funcs
 
       func :name    => :tune,
            :args    => [:pointer, :int64, :int8, :int8, OPTS],

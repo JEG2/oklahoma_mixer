@@ -15,6 +15,18 @@ class TestTopLevelInterface < Test::Unit::TestCase
     end
   end
   
+  def test_open_of_a_tcb_extension_file_creates_a_b_tree_database
+    OKMixer.open(db_path("tcb")) do |db|
+      assert_instance_of(OKMixer::BTreeDatabase, db)
+    end
+  end
+  
+  def test_open_of_a_tcf_extension_file_creates_a_fixed_length_database
+    OKMixer.open(db_path("tcf")) do |db|
+      assert_instance_of(OKMixer::FixedLengthDatabase, db)
+    end
+  end
+  
   def test_open_of_an_unrecognized_extension_fails_with_an_error
     assert_raise(ArgumentError) do
       OKMixer.open("unrecognized")

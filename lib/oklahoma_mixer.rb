@@ -14,6 +14,8 @@ require "oklahoma_mixer/hash_database/c"
 require "oklahoma_mixer/hash_database"
 require "oklahoma_mixer/b_tree_database/c"
 require "oklahoma_mixer/b_tree_database"
+require "oklahoma_mixer/fixed_length_database/c"
+require "oklahoma_mixer/fixed_length_database"
 
 module OklahomaMixer
   VERSION = "0.2.0"
@@ -22,6 +24,7 @@ module OklahomaMixer
     db_class = case File.extname(path).downcase
                when ".tch" then HashDatabase
                when ".tcb" then BTreeDatabase
+               when ".tcf" then FixedLengthDatabase
                else             fail ArgumentError, "unsupported database type"
                end
     db       = db_class.new(path, *args)

@@ -74,6 +74,24 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
     assert_in_delta(2.5, @db.store(:f, -1.0, :add), 2 ** -20)
   end
   
+  def test_adding_to_a_non_added_value_fails_with_an_error
+    @db[:i] = 42
+    assert_raise(OKMixer::Error::CabinetError) do
+      @db.store(:i, 1, :add)
+    end
+  end
+  
+  def test_switching_add_types_fails_with_an_error
+    @db.store(:i,   1, :add)
+    @db.store(:f, 1.0, :add)
+    assert_raise(OKMixer::Error::CabinetError) do
+      @db.store(:i, 2.0, :add)
+    end
+    assert_raise(OKMixer::Error::CabinetError) do
+      @db.store(:f, 2, :add)
+    end
+  end
+  
   def test_storing_with_a_block_allows_duplicate_resolution
     @db[:key] = :old
     assert_equal( :new, @db.store(:key, :new) { |key, old, new|
@@ -171,8 +189,8 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
   
   def test_values_at_supports_defaults
     @db.default = 42
-    @db[:a] = 1
-    @db[:c] = 2
+    @db[:a]     = 1
+    @db[:c]     = 2
     assert_equal(["1", 42, "2"], @db.values_at(:a, :b, :c))
   end
   

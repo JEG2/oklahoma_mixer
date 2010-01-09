@@ -5,7 +5,7 @@ module OklahomaMixer
 
       prefix :tcbdb
       
-      def_hash_consts_and_funcs
+      def_hash_database_consts_and_funcs
 
       call :name    => :TCCMP,
            :args    => [:pointer, :int, :pointer, :int, :pointer],

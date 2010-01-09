@@ -3,10 +3,9 @@
 The following is a list of planned expansions for Oklahoma Mixer in the order I
 intend to address them.
 
-1. Add support for B+Tree and Fixed-length Databases
-2. Add support for Table Databases
-3. Ensure Ruby 1.9 compatibility
-4. Write API documentation
-5. Add support for Tokyo Tyrant
-6. Add support for Tokyo Dystopia
-7. Include some higher level abstractions like mixed tables, queues, and shards
+1. Add support for Table Databases
+2. Ensure Ruby 1.9 compatibility
+3. Write API documentation
+4. Add support for Tokyo Tyrant
+5. Add support for Tokyo Dystopia
+6. Include some higher level abstractions like mixed tables, queues, and shards

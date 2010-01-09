@@ -5,6 +5,12 @@ Below is a complete listing of changes for each revision of Oklahoma Mixer.
 == 0.2.0
 
 * Added a to_hash() iterator that can preserve defaults
+* Added B+Tree Database support (order functions, key ranges,
+  and duplicate storages)
+* Added Fixed-length Database (indexing and iterating by ID's, support for
+  special ID constants, and size limits)
+* Fixed a bug that could cause Ruby to crash during GC after storing a value
+  with the duplication handler block
 
 == 0.1.0
 
