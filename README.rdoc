@@ -46,3 +46,7 @@ When I was in Japan, people would ask where I was from.  When I would tell them,
 It turns out Oklahoma Mixer is a song in Japan.  I had to track it down in a music store.  It's kind of a camp song medley, including things like the Hokey Pokey.  I'm not too sure what that has to do with Oklahoma, but at least they had heard of where I'm from.
 
 On a more practical side, this interface to Tokyo Cabinet is from Oklahoma.  I intend it to _mix_ together all of the great features of that library in some exciting new ways.  Thus, Oklahoma Mixer it is.
+
+== Is there any documentation yet?
+
+I'll write some proper API documentation down the road a bit, but users playing with the preview releases can read about how to use this library in [the Tokyo Cabinet series on my blog](http://blog.grayproductions.net/articles/using_keyvalue_stores_from_ruby).
