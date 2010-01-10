@@ -266,6 +266,14 @@ class TestGettingAndSettingByID < Test::Unit::TestCase
     assert_equal(3, @db.length)
   end
   
+  def test_empty_returns_true_while_no_pairs_are_in_the_database
+    assert(@db.empty?, "An empty database was not detected")
+    @db[42] = :value
+    assert(!@db.empty?, "A non-empty database was reported empty")
+    @db.delete(42)
+    assert(@db.empty?, "An empty database was not detected")
+  end
+  
   def test_each_key_iterates_over_ids
     @db.update(1 => 100, 2 => 200, 3 => 300)
     keys = [1, 2, 3]

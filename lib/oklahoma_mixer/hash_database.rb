@@ -205,6 +205,10 @@ module OklahomaMixer
     end
     alias_method :length, :size
     
+    def empty?
+      size.zero?
+    end
+    
     #################
     ### Iteration ###
     #################

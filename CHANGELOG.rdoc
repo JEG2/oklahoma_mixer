@@ -2,6 +2,10 @@
 
 Below is a complete listing of changes for each revision of Oklahoma Mixer.
 
+== 0.3.0
+
+* Added the empty?() method
+
 == 0.2.0
 
 * Added a to_hash() iterator that can preserve defaults

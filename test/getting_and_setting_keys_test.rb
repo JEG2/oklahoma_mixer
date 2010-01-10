@@ -249,4 +249,12 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
     assert_equal(3, @db.size)
     assert_equal(3, @db.length)
   end
+  
+  def test_empty_returns_true_while_no_pairs_are_in_the_database
+    assert(@db.empty?, "An empty database was not detected")
+    @db[:key] = :value
+    assert(!@db.empty?, "A non-empty database was reported empty")
+    @db.delete(:key)
+    assert(@db.empty?, "An empty database was not detected")
+  end
 end
