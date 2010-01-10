@@ -49,4 +49,4 @@ On a more practical side, this interface to Tokyo Cabinet is from Oklahoma.  I i
 
 == Is there any documentation yet?
 
-I'll write some proper API documentation down the road a bit, but users playing with the preview releases can read about how to use this library in [the Tokyo Cabinet series on my blog](http://blog.grayproductions.net/articles/using_keyvalue_stores_from_ruby).
+I'll write some proper API documentation down the road a bit, but users playing with the preview releases can read about how to use this library in {the Tokyo Cabinet series on my blog}[http://blog.grayproductions.net/articles/using_keyvalue_stores_from_ruby].
