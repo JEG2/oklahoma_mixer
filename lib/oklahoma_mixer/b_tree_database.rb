@@ -11,7 +11,7 @@ module OklahomaMixer
            options.fetch(:bnum,   0).to_i,
            options.fetch(:apow,  -1).to_i,
            options.fetch(:fpow,  -1).to_i,
-           to_enum_int(options.fetch(:opts, 0xFF), :opt) )
+           cast_to_enum_int(options.fetch(:opts, 0xFF), :opt) )
     end
     
     ################################
@@ -42,7 +42,7 @@ module OklahomaMixer
                                            *[ start,  include_start,
                                               finish, include_finish,
                                               limit ].flatten ) )
-          list.to_a
+          list.to_a { |key| cast_key_out(key) }
         ensure
           list.free if list
         end
@@ -63,7 +63,7 @@ module OklahomaMixer
             [ ]
           else
             list = ArrayList.new(pointer)
-            list.to_a
+            list.to_a { |value| cast_value_out(value) }
           end
         ensure
           list.free if list
@@ -100,14 +100,14 @@ module OklahomaMixer
     def each_key(start = nil)
       cursor_in_loop(start) do |iterator|
         throw(:finish_iteration) unless key = iterator.key
-        yield key
+        yield cast_key_out(key)
       end
     end
     
     def each(start = nil)
       cursor_in_loop(start) do |iterator|
         throw(:finish_iteration) unless key_and_value = iterator.key_and_value
-        yield key_and_value
+        yield key_and_value.map { |string| cast_to_encoded_string(string) }
       end
     end
     alias_method :each_pair, :each
@@ -115,14 +115,14 @@ module OklahomaMixer
     def reverse_each(start = nil)
       cursor_in_loop(start, :reverse) do |iterator|
         throw(:finish_iteration) unless key_and_value = iterator.key_and_value
-        yield key_and_value
+        yield key_and_value.map { |string| cast_to_encoded_string(string) }
       end
     end
     
     def each_value(start = nil)
       cursor_in_loop(start) do |iterator|
         throw(:finish_iteration) unless value = iterator.value
-        yield value
+        yield cast_value_out(value)
       end
     end
     
@@ -130,7 +130,9 @@ module OklahomaMixer
       cursor(start) do |iterator|
         loop do
           break unless key_and_value = iterator.key_and_value
-          break unless iterator.send(yield(*key_and_value) ? :delete : :next)
+          test = yield( *key_and_value.
+                         map { |string| cast_to_encoded_string(string) } )
+          break unless iterator.send(test ? :delete : :next)
         end
       end
     end

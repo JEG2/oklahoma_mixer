@@ -5,15 +5,15 @@ module OklahomaMixer
     end
     
     def shift
-      C.read_from_func(:shift, @pointer)
+      yield C.read_from_func(:shift, @pointer)
     end
     
-    include Enumerable
-    
-    def each
-      while value = shift
-        yield value
+    def to_a(&cast)
+      values = [ ]
+      while value = shift(&cast)
+        values << value
       end
+      values
     end
 
     def free

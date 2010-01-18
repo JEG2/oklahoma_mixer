@@ -34,7 +34,9 @@ module OklahomaMixer
       tune(options)
       
       warn "mode option supersedes mode argument" if mode and options[:mode]
-      try(:open, path, to_enum_int(options.fetch(:mode, mode || "wc"), :mode))
+      try( :open,
+           path,
+           cast_to_enum_int(options.fetch(:mode, mode || "wc"), :mode) )
     rescue Exception
       close if defined?(@db) and @db
       raise
@@ -45,7 +47,7 @@ module OklahomaMixer
            options.fetch(:bnum,  0).to_i,
            options.fetch(:apow, -1).to_i,
            options.fetch(:fpow, -1).to_i,
-           to_enum_int(options.fetch(:opts, 0xFF), :opt) )
+           cast_to_enum_int(options.fetch(:opts, 0xFF), :opt) )
     end
     
     attr_reader :path
@@ -130,7 +132,7 @@ module OklahomaMixer
     def fetch(key, *default)
       if value = try( :read_from_func, :get, cast_key_in(key),
                       :failure => nil, :no_error => {22 => nil} )
-        value
+        cast_value_out(value)
       else
         if block_given?
           warn "block supersedes default value argument" unless default.empty?
@@ -164,7 +166,7 @@ module OklahomaMixer
       prefix = options.fetch(:prefix, "").to_s
       limit  = options.fetch(:limit,  -1)
       list   = ArrayList.new(lib.fwmkeys(@db, prefix, prefix.size, limit))
-      list.to_a
+      list.to_a { |key| cast_key_out(key) }
     ensure
       list.free if list
     end
@@ -221,7 +223,7 @@ module OklahomaMixer
         return self unless key = try( :read_from_func, :iternext,
                                       :failure  => nil,
                                       :no_error => {22 => nil} )
-        yield key
+        yield cast_key_out(key)
       end
     end
     
@@ -232,7 +234,7 @@ module OklahomaMixer
           Utilities.temp_xstr do |value|
             return self unless try( :iternext3, key.pointer, value.pointer,
                                     :no_error => {22 => false} )
-            yield [key.to_s, value.to_s]
+            yield [cast_key_out(key.to_s), cast_value_out(value.to_s)]
           end
         end
       end
@@ -331,7 +333,7 @@ module OklahomaMixer
       end
     end
     
-    def to_enum_int(str_or_int, name)
+    def cast_to_enum_int(str_or_int, name)
       return str_or_int if str_or_int.is_a? Integer
       const = "#{name.to_s.upcase}S"
       names = self.class.const_get(const)
@@ -365,5 +367,11 @@ module OklahomaMixer
     end
     alias_method :cast_key_in,   :cast_to_bytes_and_length
     alias_method :cast_value_in, :cast_to_bytes_and_length
+    
+    def cast_to_encoded_string(string)
+      string
+    end
+    alias_method :cast_key_out,   :cast_to_encoded_string
+    alias_method :cast_value_out, :cast_to_encoded_string
   end
 end

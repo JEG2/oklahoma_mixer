@@ -1,7 +1,7 @@
 module OklahomaMixer
   class ExtensibleString  # :nodoc:
-    def initialize(pointer = C.new)
-      @pointer = pointer
+    def initialize
+      @pointer = C.new
     end
     
     attr_reader :pointer

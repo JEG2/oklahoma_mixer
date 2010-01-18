@@ -45,7 +45,7 @@ module OklahomaMixer
           array = list.get_array_of_uint64(0, count.get_int(0))
           array.shift if array.first == start  and not include_start
           array.pop   if array.last  == finish and not include_finish
-          array
+          array  # cast not needed:  already Integer
         ensure
           Utilities.free(list) if list
         end
@@ -62,7 +62,7 @@ module OklahomaMixer
         return self unless key = try( :iternext,
                                       :failure  => 0,
                                       :no_error => {22 => nil} )
-        yield key
+        yield key  # cast not needed:  already Integer
       end
     end
     
@@ -90,6 +90,11 @@ module OklahomaMixer
       else
         key.to_i
       end
+    end
+    
+    # Override to prevent String manipulations on ID.
+    def cast_key_out(integer)
+      integer
     end
   end
 end
