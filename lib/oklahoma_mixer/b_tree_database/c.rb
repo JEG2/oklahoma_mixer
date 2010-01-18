@@ -26,6 +26,9 @@ module OklahomaMixer
       func :name    => :putdup,
            :args    => [:pointer, :pointer, :int, :pointer, :int],
            :returns => :bool
+      func :name    => :putdup3,
+           :args    => [:pointer, :pointer, :int, :pointer],
+           :returns => :bool
       func :name    => :out3,
            :args    => [:pointer, :pointer, :int],
            :returns => :bool

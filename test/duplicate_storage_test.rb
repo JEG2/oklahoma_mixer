@@ -11,9 +11,15 @@ class TestDuplicateStorage < Test::Unit::TestCase
   end
   
   def test_duplicates_can_be_stored
-    assert(@db.store("Gray", "Dana",  :dup), "Failed to store initial value")
-    assert(@db.store("Gray", "James", :dup), "Failed to store duplicate value")
-    assert_equal("Dana", @db["Gray"])  # always returns the first
+    assert_equal("Dana",  @db.store("Gray", "Dana",  :dup))
+    assert_equal("James", @db.store("Gray", "James",  :dup))
+    assert_equal("Dana",  @db["Gray"])  # always returns the first
+  end
+  
+  def test_multiple_duplicates_can_be_stored_at_once
+    assert_equal(%w[a b c], @db.store(:letters, %w[a b c], :dup))
+    assert_equal("a",       @db[:letters])
+    assert_equal(%w[a b c], @db.values(:letters))
   end
   
   def test_keys_are_a_unique_listing_not_showing_duplicates
@@ -27,9 +33,9 @@ class TestDuplicateStorage < Test::Unit::TestCase
     @db[:other] = "one record"
     assert_equal(["one record"], @db.values)
     assert_equal([ ],            @db.values("Gray"))
-    assert(@db.store("Gray", "Dana", :dup), "Failed to store initial value")
-    assert_equal(%w[Dana], @db.values("Gray"))
-    assert(@db.store("Gray", "James", :dup), "Failed to store duplicate value")
+    assert_equal("Dana",         @db.store("Gray", "Dana",  :dup))
+    assert_equal(%w[Dana],       @db.values("Gray"))
+    assert_equal("James",        @db.store("Gray", "James",  :dup))
     assert_equal(%w[Dana James], @db.values("Gray"))
   end
   
@@ -57,12 +63,12 @@ class TestDuplicateStorage < Test::Unit::TestCase
   
   def test_size_can_be_scoped_to_a_key_to_retrieve_all_duplicates
     @db[:other] = "one record"
-    assert_equal(1, @db.size)
-    assert_equal(0, @db.size("Gray"))
-    assert(@db.store("Gray", "Dana", :dup), "Failed to store initial value")
-    assert_equal(1, @db.size("Gray"))
-    assert(@db.store("Gray", "James", :dup), "Failed to store duplicate value")
-    assert_equal(2, @db.size("Gray"))
+    assert_equal(1,       @db.size)
+    assert_equal(0,       @db.size("Gray"))
+    assert_equal("Dana",  @db.store("Gray", "Dana",  :dup))
+    assert_equal(1,       @db.size("Gray"))
+    assert_equal("James", @db.store("Gray", "James",  :dup))
+    assert_equal(2,       @db.size("Gray"))
   end
   
   def test_duplicates_show_up_in_cursor_based_iteration_of_keys
