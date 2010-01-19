@@ -113,7 +113,8 @@ module OklahomaMixer
     def each(start = nil)
       cursor_in_loop(start) do |iterator|
         throw(:finish_iteration) unless key_and_value = iterator.key_and_value
-        yield key_and_value.map { |string| cast_to_encoded_string(string) }
+        yield [ cast_key_out(key_and_value.first),
+                cast_value_out(key_and_value.last) ]
       end
     end
     alias_method :each_pair, :each
@@ -121,7 +122,8 @@ module OklahomaMixer
     def reverse_each(start = nil)
       cursor_in_loop(start, :reverse) do |iterator|
         throw(:finish_iteration) unless key_and_value = iterator.key_and_value
-        yield key_and_value.map { |string| cast_to_encoded_string(string) }
+        yield [ cast_key_out(key_and_value.first),
+                cast_value_out(key_and_value.last) ]
       end
     end
     
@@ -136,8 +138,8 @@ module OklahomaMixer
       cursor(start) do |iterator|
         loop do
           break unless key_and_value = iterator.key_and_value
-          test = yield( *key_and_value.
-                         map { |string| cast_to_encoded_string(string) } )
+          test = yield( cast_key_out(key_and_value.first),
+                        cast_value_out(key_and_value.last) )
           break unless iterator.send(test ? :delete : :next)
         end
       end
