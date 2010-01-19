@@ -179,6 +179,13 @@ module OklahomaMixer
     ensure
       xstr.free if xstr
     end
+
+    def self.temp_list(size)
+      list = ArrayList.new(size)
+      yield list
+    ensure
+      list.free if list
+    end
     
     extend FFIDSL
     

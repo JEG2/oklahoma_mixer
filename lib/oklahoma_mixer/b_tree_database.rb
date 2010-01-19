@@ -21,9 +21,10 @@ module OklahomaMixer
     def store(key, value, mode = nil)
       if mode == :dup
         if value.is_a? Array
-          list = ArrayList.new(value.size)
-          list.push(*value) { |string| cast_value_in(string) }
-          try(:putdup3, cast_key_in(key), list.pointer)
+          Utilities.temp_list(value.size) do |list|
+            list.push(*value) { |string| cast_value_in(string) }
+            try(:putdup3, cast_key_in(key), list.pointer)
+          end
         else
           try(:putdup, cast_key_in(key), cast_value_in(value))
         end

@@ -5,10 +5,11 @@ module OklahomaMixer
 
       prefix :tclist
       
-      def_new_and_del_funcs
       func :name    => :new2,
            :args    => :int,
            :returns => :pointer
+      func :name    => :del,
+           :args    => :pointer
       
       func :name    => :shift,
            :args    => [:pointer, :pointer],
