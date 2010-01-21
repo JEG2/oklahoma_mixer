@@ -5,6 +5,7 @@ Below is a complete listing of changes for each revision of Oklahoma Mixer.
 == 0.3.0
 
 * Added the empty?() method
+* Added the ability to set an Array of duplicates at once for B+Tree Databases
 
 == 0.2.0
 

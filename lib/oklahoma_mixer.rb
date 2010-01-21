@@ -7,6 +7,8 @@ require "oklahoma_mixer/extensible_string/c"
 require "oklahoma_mixer/extensible_string"
 require "oklahoma_mixer/array_list/c"
 require "oklahoma_mixer/array_list"
+require "oklahoma_mixer/hash_map/c"
+require "oklahoma_mixer/hash_map"
 require "oklahoma_mixer/cursor/c"
 require "oklahoma_mixer/cursor"
 
@@ -16,6 +18,8 @@ require "oklahoma_mixer/b_tree_database/c"
 require "oklahoma_mixer/b_tree_database"
 require "oklahoma_mixer/fixed_length_database/c"
 require "oklahoma_mixer/fixed_length_database"
+require "oklahoma_mixer/table_database/c"
+require "oklahoma_mixer/table_database"
 
 module OklahomaMixer
   VERSION = "0.3.0"
@@ -25,6 +29,7 @@ module OklahomaMixer
                when ".tch" then HashDatabase
                when ".tcb" then BTreeDatabase
                when ".tcf" then FixedLengthDatabase
+               when ".tct" then TableDatabase
                else             fail ArgumentError, "unsupported database type"
                end
     db       = db_class.new(path, *args)

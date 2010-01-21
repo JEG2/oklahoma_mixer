@@ -1,4 +1,5 @@
 require "test_helper"
+require "shared_storage"
 
 class TestGettingAndSettingKeys < Test::Unit::TestCase
   def setup
@@ -10,6 +11,8 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
     remove_db_files
   end
 
+  include SharedStorage
+
   def test_a_key_value_pair_can_be_stored_and_fetched_from_the_database
     assert_equal("value", @db.store("key", "value"))
     assert_equal("value", @db.fetch("key"))  # later
@@ -18,27 +21,6 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
   def test_both_keys_and_values_are_converted_to_strings
     assert_equal(42,   @db.store(:num, 42))
     assert_equal("42", @db.fetch("num"))  # effectively the same key
-  end
-  
-  def test_fetching_a_missing_value_fails_with_an_index_error
-    assert_raise(IndexError) do
-      @db.fetch(:missing)
-    end
-  end
-  
-  def test_fetch_can_return_a_default_for_a_missing_value
-    assert_equal(42, @db.fetch(:missing, 42))
-  end
-  
-  def test_fetch_can_run_a_block_returning_its_result_for_a_missing_value
-    assert_equal(:missing, @db.fetch(:missing) { |key| key })
-  end
-  
-  def test_fetching_with_a_block_overrides_a_default_and_triggers_a_warning
-    warning = capture_stderr do
-      assert_equal(42, @db.fetch(:missing, 13) { 42 })
-    end
-    assert(!warning.empty?, "A warning was not issued for a default and block")
   end
   
   def test_storing_with_keep_mode_adds_a_value_only_if_it_didnt_already_exist
@@ -127,36 +109,6 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
     assert_equal("42", @db[:num])
   end
   
-  def test_indexing_returns_nil_instead_of_failing_with_index_error
-    assert_nil(@db[:missing])
-  end
-  
-  def test_a_default_can_be_set_for_indexing_to_return
-    @db.default = 42
-    assert_equal(42, @db[:missing])
-  end
-  
-  def test_the_indexing_default_will_be_run_if_it_is_a_proc
-    @db.default = lambda { |key| "is #{key}" }
-    assert_equal("is missing", @db[:missing])
-  end
-  
-  def test_the_indexing_default_for_a_given_key_can_be_retrieved
-    @db.default = lambda { |key| "is #{key}" }
-    assert_equal("is ",        @db.default)
-    assert_equal("is missing", @db.default(:missing))
-  end
-  
-  def test_the_indexing_default_can_be_changed
-    assert_nil(@db[:missing])
-    assert_equal(42, @db.default = 42)
-    assert_equal(42, @db[:missing])
-    proc = lambda { |key| fail RuntimeError, "%p not found" % [key]}
-    assert_equal(proc, @db.default = proc)
-    error = assert_raise(RuntimeError) { @db[:missing] }
-    assert_equal(":missing not found", error.message)
-  end
-  
   def test_include_and_aliases_can_be_used_to_check_for_the_existance_of_a_key
     @db[:exist] = true
     %w[include? has_key? key? member?].each do |query|
@@ -226,14 +178,6 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
     @db[:key] = :value
     assert_equal("value", @db.delete(:key))
     assert_nil(@db[:key])
-  end
-  
-  def test_delete_returns_nil_for_a_missing_key
-    assert_nil(@db.delete(:missing))
-  end
-  
-  def test_delete_can_be_passed_a_block_to_handle_missing_keys
-    assert_equal(42, @db.delete(:missing) { 42 })
   end
   
   def test_clear_removes_all_keys_from_the_database

@@ -11,7 +11,7 @@ module SharedIteration
       assert_instance_of(Array, key_value_array)
       assert_equal(2, key_value_array.size)
       key, value = key_value_array
-      assert_equal(key * 2, value)
+      assert_equal(@values[@keys.index(key)], value)
       @keys.delete(key)
       @values.delete(value)
     end
@@ -58,16 +58,17 @@ module SharedIteration
     assert_kind_of(Enumerable, @db)
     
     # examples
-    assert_equal(%w[b bb], @db.find { |_, value| value == "bb" })
-    assert_nil(@db.find { |_, value| value == "dd" })
-    assert_equal(%w[aaa bbb ccc], @db.map { |key, value| key + value }.sort)
-    assert( @db.any? { |_, value| value.include? "c" },
+    assert_equal( ["b", @values[@keys.index("b")]],
+                  @db.find { |key, _| key == "b" } )
+    assert_nil(@db.find { |key, _| key == "d" })
+    assert_equal(%w[aaa bbb ccc], @db.map { |key, _| key * 3 }.sort)
+    assert( @db.any? { |_, value| value.include?("c") or value.include?("cc") },
             "A value was not found during iteration" )
   end
   
   def test_delete_if_removes_all_keys_for_which_the_block_returns_true
     @db.delete_if { |key, _| key != "a" }
-    assert_equal([%w[a aa]], @db.to_a)
+    assert_equal(%w[a], @db.keys)
   end
   
   def test_iterators_return_self_to_match_hash_interface

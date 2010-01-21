@@ -38,13 +38,15 @@ module OklahomaMixer
       end
       
       def read_from_func(func, *args)
+        no_free = args.shift if args.first.is_a?(Symbol) and
+                                args.first == :no_free
         Utilities.temp_int do |size|
           begin
             args    << size
             pointer =  send(func, *args)
             pointer.address.zero? ? nil : pointer.get_bytes(0, size.get_int(0))
           ensure
-            Utilities.free(pointer) if pointer
+            Utilities.free(pointer) if pointer and not no_free
           end
         end
       end
@@ -185,6 +187,13 @@ module OklahomaMixer
       yield list
     ensure
       list.free if list
+    end
+
+    def self.temp_map
+      map = HashMap.new
+      yield map
+    ensure
+      map.free if map
     end
     
     extend FFIDSL
