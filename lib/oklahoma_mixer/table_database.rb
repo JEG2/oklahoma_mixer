@@ -35,6 +35,12 @@ module OklahomaMixer
         end
       end
     end
+    
+    def generate_unique_id
+      try(:genuid, :failure => -1)
+    end
+    alias_method :uid, :generate_unique_id
+    
     #################
     ### Iteration ###
     #################

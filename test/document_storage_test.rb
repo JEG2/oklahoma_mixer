@@ -219,4 +219,15 @@ class TestDocumentStorage < Test::Unit::TestCase
     @db.delete(:doc)
     assert(@db.empty?, "An empty database was not detected")
   end
+  
+  def test_generate_unique_id_and_uid_can_be_used_to_manage_increasing_ids
+    assert_equal(1, @db.generate_unique_id)
+    assert_equal([2, 3, 4, 5], Array.new(4) { @db.uid })
+  end
+  
+  def test_uids_are_not_stored_in_documents
+    assert_equal(0, @db.size)
+    assert_equal(1, @db.uid)
+    assert_equal(0, @db.size)
+  end
 end
