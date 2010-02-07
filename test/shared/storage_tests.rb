@@ -1,4 +1,4 @@
-module SharedStorage
+module StorageTests
   def test_fetching_a_missing_value_fails_with_an_index_error
     assert_raise(IndexError) do
       @db.fetch(:missing)

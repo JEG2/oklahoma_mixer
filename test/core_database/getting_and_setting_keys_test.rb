@@ -1,5 +1,5 @@
 require "test_helper"
-require "shared_storage"
+require "shared/storage_tests"
 
 class TestGettingAndSettingKeys < Test::Unit::TestCase
   def setup
@@ -11,7 +11,7 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
     remove_db_files
   end
 
-  include SharedStorage
+  include StorageTests
 
   def test_a_key_value_pair_can_be_stored_and_fetched_from_the_database
     assert_equal("value", @db.store("key", "value"))

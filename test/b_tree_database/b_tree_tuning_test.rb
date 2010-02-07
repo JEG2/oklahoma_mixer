@@ -1,12 +1,12 @@
 require "test_helper"
-require "shared_tuning"
+require "shared/tuning_tests"
 
 class TestBTreeTuning < Test::Unit::TestCase
   def teardown
     remove_db_files
   end
   
-  include SharedTuning
+  include TuningTests
   
   def test_leaf_members_can_be_set_with_other_tuning_defaults
     members = rand(1_000) + 1

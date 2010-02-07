@@ -1,12 +1,12 @@
 require "test_helper"
-require "shared_hash_tuning"
+require "shared/hash_tuning_tests"
 
 class TestTableTuning < Test::Unit::TestCase
   def teardown
     remove_db_files
   end
   
-  include SharedHashTuning
+  include HashTuningTests
   
   def test_records_cached_can_be_set_with_other_cache_defaults
     records = rand(1_000) + 1

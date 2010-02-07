@@ -1,5 +1,5 @@
 require "test_helper"
-require "shared_iteration"
+require "shared/iteration_tests"
 
 class TestIteration < Test::Unit::TestCase
   def setup
@@ -16,5 +16,5 @@ class TestIteration < Test::Unit::TestCase
     remove_db_files
   end
   
-  include SharedIteration
+  include IterationTests
 end

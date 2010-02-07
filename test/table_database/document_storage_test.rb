@@ -1,5 +1,5 @@
 require "test_helper"
-require "shared_storage"
+require "shared/storage_tests"
 
 class TestDocumentStorage < Test::Unit::TestCase
   def setup
@@ -11,7 +11,7 @@ class TestDocumentStorage < Test::Unit::TestCase
     remove_db_files
   end
   
-  include SharedStorage
+  include StorageTests
 
   def test_a_document_can_be_stored_and_fetched_from_the_database
     document = {"a" => "1", "b" => "2"}

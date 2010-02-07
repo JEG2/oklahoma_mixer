@@ -1,4 +1,4 @@
-module SharedTuning
+module TuningTests
   def test_a_mutex_can_be_activated_as_the_database_is_created
     assert_option_calls([:setmutex], :mutex => true)
   end

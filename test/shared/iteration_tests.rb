@@ -1,4 +1,4 @@
-module SharedIteration
+module IterationTests
   def test_each_key_iterates_over_all_keys_in_the_database
     @db.each_key do |key|
       @keys.delete(key)

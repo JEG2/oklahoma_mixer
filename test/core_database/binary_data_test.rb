@@ -1,5 +1,5 @@
 require "test_helper"
-require "shared_binary_data"
+require "shared/binary_data_tests"
 
 class TestBinaryData < Test::Unit::TestCase
   def setup
@@ -14,7 +14,7 @@ class TestBinaryData < Test::Unit::TestCase
     remove_db_files
   end
   
-  include SharedBinaryData
+  include BinaryDataTests
   
   def test_keys_and_values_can_be_read_with_null_bytes
     assert_equal(@value, @db[@key])

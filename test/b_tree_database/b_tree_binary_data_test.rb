@@ -1,5 +1,5 @@
 require "test_helper"
-require "shared_binary_data"
+require "shared/binary_data_tests"
 
 class TestBTreeBinaryData < Test::Unit::TestCase
   def setup
@@ -15,7 +15,7 @@ class TestBTreeBinaryData < Test::Unit::TestCase
     remove_db_files
   end
   
-  include SharedBinaryData
+  include BinaryDataTests
 
   def test_null_bytes_are_preserved_during_value_iteration
     @db.each_value do |value|

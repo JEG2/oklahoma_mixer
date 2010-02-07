@@ -1,7 +1,7 @@
-require "shared_tuning"
+require "shared/tuning_tests"
 
-module SharedHashTuning
-  include SharedTuning
+module HashTuningTests
+  include TuningTests
 
   def test_a_bucket_array_size_can_be_set_with_other_tuning_defaults
     size = rand(1_000) + 1

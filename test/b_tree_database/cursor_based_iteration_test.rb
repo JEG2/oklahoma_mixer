@@ -1,5 +1,5 @@
 require "test_helper"
-require "shared_iteration"
+require "shared/iteration_tests"
 
 class TestCursorBasedIteration < Test::Unit::TestCase
   def setup
@@ -16,7 +16,7 @@ class TestCursorBasedIteration < Test::Unit::TestCase
     remove_db_files
   end
   
-  include SharedIteration
+  include IterationTests
   
   def test_each_key_can_begin_iteration_at_a_passed_key
     @db.each_key("b") do |key|

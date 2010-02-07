@@ -1,4 +1,4 @@
-module SharedBinaryData
+module BinaryDataTests
   def test_null_bytes_are_preserved_during_key_iteration
     @db.each_key do |key|
       assert_equal(@key, key)

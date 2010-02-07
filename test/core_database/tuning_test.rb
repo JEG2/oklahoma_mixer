@@ -1,12 +1,12 @@
 require "test_helper"
-require "shared_hash_tuning"
+require "shared/hash_tuning_tests"
 
 class TestTuning < Test::Unit::TestCase
   def teardown
     remove_db_files
   end
   
-  include SharedHashTuning
+  include HashTuningTests
   
   def test_limit_for_cached_records_can_be_set
     limit = rand(1_000) + 1
