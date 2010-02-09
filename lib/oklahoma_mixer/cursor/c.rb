@@ -1,3 +1,5 @@
+require "oklahoma_mixer/utilities"
+
 module OklahomaMixer
   class Cursor
     module C  # :nodoc:

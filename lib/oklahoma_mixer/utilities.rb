@@ -1,3 +1,5 @@
+require "ffi"
+
 module OklahomaMixer
   module Utilities  # :nodoc:
     module FFIDSL   # :nodoc:

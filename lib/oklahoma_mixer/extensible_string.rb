@@ -1,3 +1,5 @@
+require "oklahoma_mixer/extensible_string/c"
+
 module OklahomaMixer
   class ExtensibleString  # :nodoc:
     def initialize

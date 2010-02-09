@@ -1,30 +1,10 @@
-require "ffi"
-
-require "oklahoma_mixer/error"
-require "oklahoma_mixer/utilities"
-
-require "oklahoma_mixer/extensible_string/c"
-require "oklahoma_mixer/extensible_string"
-require "oklahoma_mixer/array_list/c"
-require "oklahoma_mixer/array_list"
-require "oklahoma_mixer/hash_map/c"
-require "oklahoma_mixer/hash_map"
-require "oklahoma_mixer/cursor/c"
-require "oklahoma_mixer/cursor"
-require "oklahoma_mixer/query/c"
-require "oklahoma_mixer/query"
-
-require "oklahoma_mixer/hash_database/c"
-require "oklahoma_mixer/hash_database"
-require "oklahoma_mixer/b_tree_database/c"
-require "oklahoma_mixer/b_tree_database"
-require "oklahoma_mixer/fixed_length_database/c"
-require "oklahoma_mixer/fixed_length_database"
-require "oklahoma_mixer/table_database/c"
-require "oklahoma_mixer/table_database"
-
 module OklahomaMixer
   VERSION = "0.3.0"
+  
+  autoload :HashDatabase,        "oklahoma_mixer/hash_database"
+  autoload :BTreeDatabase,       "oklahoma_mixer/b_tree_database"
+  autoload :FixedLengthDatabase, "oklahoma_mixer/fixed_length_database"
+  autoload :TableDatabase,       "oklahoma_mixer/table_database"
   
   def self.open(path, *args)
     db_class = case File.extname(path).downcase

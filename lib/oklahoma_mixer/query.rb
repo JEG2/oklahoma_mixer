@@ -1,3 +1,6 @@
+require "oklahoma_mixer/error"
+require "oklahoma_mixer/query/c"
+
 module OklahomaMixer
   class Query  # :nodoc:
     def initialize(table_pointer)

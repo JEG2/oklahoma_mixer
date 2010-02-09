@@ -1,3 +1,5 @@
+require "oklahoma_mixer/hash_map/c"
+
 module OklahomaMixer
   class HashMap  # :nodoc:
     def initialize(pointer = C.new)

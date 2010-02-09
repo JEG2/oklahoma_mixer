@@ -1,3 +1,8 @@
+require "oklahoma_mixer/array_list"
+require "oklahoma_mixer/cursor"
+require "oklahoma_mixer/hash_database"
+require "oklahoma_mixer/b_tree_database/c"
+
 module OklahomaMixer
   class BTreeDatabase < HashDatabase
     ###################

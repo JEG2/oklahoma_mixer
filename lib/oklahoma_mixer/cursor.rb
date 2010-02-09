@@ -1,3 +1,6 @@
+require "oklahoma_mixer/extensible_string"
+require "oklahoma_mixer/cursor/c"
+
 module OklahomaMixer
   class Cursor  # :nodoc:
     def initialize(b_tree_pointer, start = nil, reverse = false)

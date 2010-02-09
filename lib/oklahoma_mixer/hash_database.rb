@@ -1,3 +1,8 @@
+require "oklahoma_mixer/error"
+require "oklahoma_mixer/extensible_string"
+require "oklahoma_mixer/array_list"
+require "oklahoma_mixer/hash_database/c"
+
 module OklahomaMixer
   class HashDatabase
     #################

@@ -7,6 +7,7 @@ Below is a complete listing of changes for each revision of Oklahoma Mixer.
 * Added the empty?() method
 * Added the ability to set an Array of duplicates at once for B+Tree Databases
 * Added Table Database support (document storage, queries/searches, and indexes)
+* Switched to autoloading database interfaces as they are used
 
 == 0.2.0
 

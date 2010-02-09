@@ -1,3 +1,10 @@
+require "oklahoma_mixer/error"
+require "oklahoma_mixer/array_list"
+require "oklahoma_mixer/hash_map"
+require "oklahoma_mixer/query"
+require "oklahoma_mixer/hash_database"
+require "oklahoma_mixer/table_database/c"
+
 module OklahomaMixer
   class TableDatabase < HashDatabase
     module Paginated

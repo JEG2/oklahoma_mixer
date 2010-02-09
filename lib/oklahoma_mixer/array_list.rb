@@ -1,3 +1,5 @@
+require "oklahoma_mixer/array_list/c"
+
 module OklahomaMixer
   class ArrayList  # :nodoc:
     def initialize(pointer_or_size)

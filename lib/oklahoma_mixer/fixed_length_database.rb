@@ -1,3 +1,6 @@
+require "oklahoma_mixer/hash_database"
+require "oklahoma_mixer/fixed_length_database/c"
+
 module OklahomaMixer
   class FixedLengthDatabase < HashDatabase
     ###################
@@ -86,7 +89,7 @@ module OklahomaMixer
     def cast_key_in(key)
       case key
       when :min, :max, :prev, :next, "min", "max", "prev", "next"
-        C::IDS["FDBID#{key.to_s.upcase}".to_sym]
+        lib::IDS["FDBID#{key.to_s.upcase}".to_sym]
       else
         key.to_i
       end

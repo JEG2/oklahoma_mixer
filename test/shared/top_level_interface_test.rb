@@ -5,8 +5,31 @@ class TestTopLevelInterface < Test::Unit::TestCase
     remove_db_files
   end
   
+  def test_ok_mixer_is_a_shortcut_for_oklahoma_mixer
+    assert_same(OklahomaMixer, OKMixer)
+  end
+  
   def test_the_version_constant_contains_the_current_version_number
     assert_match(/\A\d\.\d\.\d\z/, OKMixer::VERSION)
+  end
+  
+  def test_the_hash_database_interface_is_autoloaded_as_needed
+    assert_loads(%w[hash], %Q{OKMixer.open(#{db_path('tch').inspect}) { }})
+  end
+  
+  def test_the_b_tree_database_interface_is_autoloaded_as_needed
+    assert_loads( %w[b_tree hash],
+                  %Q{OKMixer.open(#{db_path('tcb').inspect}) { }} )
+  end
+  
+  def test_the_fixed_length_database_interface_is_autoloaded_as_needed
+    assert_loads( %w[fixed_length hash],
+                  %Q{OKMixer.open(#{db_path('tcf').inspect}) { }} )
+  end
+  
+  def test_the_table_database_interface_is_autoloaded_as_needed
+    assert_loads( %w[hash table],
+                  %Q{OKMixer.open(#{db_path('tct').inspect}) { }} )
   end
   
   def test_open_of_a_tch_extension_file_creates_a_hash_database
@@ -59,7 +82,15 @@ class TestTopLevelInterface < Test::Unit::TestCase
     db.close if db
   end
   
-  def test_ok_mixer_is_a_shortcut_for_oklahoma_mixer
-    assert_same(OklahomaMixer, OKMixer)
+  private
+  
+  def assert_loads(fields, ruby_code)
+    run_ruby <<-END_RUBY
+    loaded_dbs = lambda { $".grep(/\\b(\\w+)_database\\.rb\\z/) { $1 }.sort }
+    before     = loaded_dbs.call
+    #{ruby_code}
+    puts loaded_dbs.call - before
+    END_RUBY
+    assert_equal(fields, @output.scan(/\w+/))
   end
 end

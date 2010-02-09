@@ -1,3 +1,5 @@
+require "oklahoma_mixer/utilities"
+
 module OklahomaMixer
   class HashMap
     module C  # :nodoc:

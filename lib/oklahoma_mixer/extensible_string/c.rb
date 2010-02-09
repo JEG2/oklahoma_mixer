@@ -1,3 +1,5 @@
+require "oklahoma_mixer/utilities"
+
 module OklahomaMixer
   class ExtensibleString
     module C  # :nodoc:
