@@ -260,6 +260,7 @@ module OklahomaMixer
            lib::INDEXES[:TDBITOPT],
            :no_error => {2 => false} )
     end
+    alias_method :defrag_index, :optimize_index
     
     #######
     private
