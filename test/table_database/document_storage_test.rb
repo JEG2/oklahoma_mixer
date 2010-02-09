@@ -91,35 +91,21 @@ class TestDocumentStorage < Test::Unit::TestCase
     assert_equal({"_num" => "4.5"}, @db.fetch(:num))
   end
   
-  # def test_storing_with_a_block_allows_duplicate_resolution
-  #   @db[:key] = :old
-  #   assert_equal( :new, @db.store(:key, :new) { |key, old, new|
-  #                                               "#{key}=#{old}&#{new}" } )
-  #   assert_equal("key=old&new", @db[:key])
-  # end
-  # 
-  # def test_storing_with_a_block_overrides_a_mode_and_triggers_a_warning
-  #   warning = capture_stderr do
-  #     assert_equal(:new, @db.store(:key, :new, :async) { |key, old, new| })
-  #   end
-  #   assert(!warning.empty?, "A warning was not issued for a mode and block")
-  # end
-  # 
-  # def test_storing_with_a_mode_not_supported_by_the_database_triggers_a_warning
-  #   warning = capture_stderr do
-  #     assert_equal(:one, @db.store(:dups, :one, :dup))  # normal store
-  #   end
-  #   assert(!warning.empty?, "A warning was not issued for an unsupported mode")
-  #   assert_equal("one", @db[:dups])
-  #   
-  #   bdb do |db|
-  #     warning = capture_stderr do
-  #       assert_equal(:value, db.store(:key, :value, :async))  # normal store
-  #     end
-  #     assert(!warning.empty?, "A warning was not issued for an unsupported mode")
-  #     assert_equal("value", db[:key])
-  #   end
-  # end
+  def test_storing_with_a_block_allows_duplicate_resolution
+    @db[:key] = {:a => 1, :b => 2}
+    assert_equal( {:b => 2.5, :c => 3},
+                  @db.store(:key, {:b => 2.5, :c => 3}) { |key, old, new|
+                    old.merge(new).merge("" => key)
+                  } )
+    assert_equal({"" => "key", "a" => "1", "b" => "2.5", "c" => "3"}, @db[:key])
+  end
+  
+  def test_storing_with_a_block_overrides_a_mode_and_triggers_a_warning
+    warning = capture_stderr do
+      assert_equal({ }, @db.store(:key, { }, :keep) { |key, old, new| })
+    end
+    assert(!warning.empty?, "A warning was not issued for a mode and block")
+  end
   
   def test_include_and_aliases_can_be_used_to_check_for_the_existance_of_a_key
     @db[:exist] = {"I" => "exist"}
@@ -139,14 +125,20 @@ class TestDocumentStorage < Test::Unit::TestCase
                     {"c" => "new"} ], @db.values_at(:a, :b, :c) )
   end
   
-  # def test_update_can_be_passed_a_block_for_handling_duplicates
-  #   @db[:b] = "old"
-  #   assert_equal( @db, @db.update( :a => "new",
-  #                                  :b => "new",
-  #                                  :c => "new") { |key, old, new|
-  #                                                 "#{key}=#{old}&#{new}" } )
-  #   assert_equal(%w[new b=old&new new], @db.values_at(:a, :b, :c))
-  # end
+  def test_update_can_be_passed_a_block_for_handling_duplicates
+    @db[:b] = {:keep => 1, :replace => 2}
+    assert_equal( @db, @db.update( :a => {:new => 1},
+                                   :b => {:replace => 2.5, :add => 3},
+                                   :c => {:new => 2} ) { |key, old, new|
+                         old.merge(new).merge("" => key)
+                       } )
+    assert_equal( [ {"new"      => "1"},
+                    { ""        => "b",
+                      "keep"    => "1",
+                      "replace" => "2.5",
+                      "add"     => "3" },
+                    {"new"      => "2"} ], @db.values_at(:a, :b, :c) )
+  end
   
   def test_values_at_can_be_used_to_retrieve_multiple_documents_at_once
     @db[:a] = {:a => 1}

@@ -166,7 +166,7 @@ module OklahomaMixer
       prefix = options.fetch(:prefix, "").to_s
       limit  = options.fetch(:limit,  -1)
       list   = ArrayList.new(lib.fwmkeys(@db, prefix, prefix.size, limit))
-      list.to_a { |key| cast_key_out(key) }
+      list.map { |key| cast_key_out(key) }
     ensure
       list.free if list
     end

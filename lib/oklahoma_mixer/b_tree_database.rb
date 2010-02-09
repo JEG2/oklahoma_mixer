@@ -49,7 +49,7 @@ module OklahomaMixer
                                            *[ start,  include_start,
                                               finish, include_finish,
                                               limit ].flatten ) )
-          list.to_a { |key| cast_key_out(key) }
+          list.map { |key| cast_key_out(key) }
         ensure
           list.free if list
         end
@@ -70,7 +70,7 @@ module OklahomaMixer
             [ ]
           else
             list = ArrayList.new(pointer)
-            list.to_a { |value| cast_value_out(value) }
+            list.map { |value| cast_value_out(value) }
           end
         ensure
           list.free if list

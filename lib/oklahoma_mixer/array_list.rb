@@ -10,13 +10,14 @@ module OklahomaMixer
     attr_reader :pointer
     
     def shift
-      yield C.read_from_func(:shift, @pointer)
+      value = C.read_from_func(:shift, @pointer)
+      block_given? ? yield(value) : value
     end
     
-    def to_a(&cast)
+    def map
       values = [ ]
-      while value = shift(&cast)
-        values << value
+      while value = shift
+        values << yield(value)
       end
       values
     end

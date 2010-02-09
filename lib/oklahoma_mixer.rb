@@ -11,6 +11,8 @@ require "oklahoma_mixer/hash_map/c"
 require "oklahoma_mixer/hash_map"
 require "oklahoma_mixer/cursor/c"
 require "oklahoma_mixer/cursor"
+require "oklahoma_mixer/query/c"
+require "oklahoma_mixer/query"
 
 require "oklahoma_mixer/hash_database/c"
 require "oklahoma_mixer/hash_database"

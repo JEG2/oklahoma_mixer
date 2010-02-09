@@ -168,6 +168,13 @@ module OklahomaMixer
     end
     INT_MIN = int_min && int_min.to_i
     
+    def self.temp_pointer(size)
+      pointer = FFI::MemoryPointer.new(:pointer, size)
+      yield pointer
+    ensure
+      pointer.free if pointer
+    end
+    
     def self.temp_int
       int = FFI::MemoryPointer.new(:int)
       yield int

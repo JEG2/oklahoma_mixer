@@ -6,13 +6,20 @@ module OklahomaMixer
       prefix :tctdb
 
       const :OPTS, %w[TLARGE TDEFLATE TBZIP TTCBS]
-      INDEXES = enum :TDBITLEXICAL,  0,
-                     :TDBITDECIMAL,  1,
-                     :TDBITTOKEN,    2,
-                     :TDBITQGRAM,    3,
-                     :TDBITOPT,      9998,
-                     :TDBITVOID,     9999,
-                     :TDBITKEEP,     1 << 24
+      INDEXES  = enum :TDBITLEXICAL,  0,
+                      :TDBITDECIMAL,  1,
+                      :TDBITTOKEN,    2,
+                      :TDBITQGRAM,    3,
+                      :TDBITOPT,      9998,
+                      :TDBITVOID,     9999,
+                      :TDBITKEEP,     1 << 24
+      FLAGS    = enum :TDBQPPUT,      1 << 0,
+                      :TDBQPOUT,      1 << 1,
+                      :TDBQPSTOP,     1 << 24
+      SEARCHES = enum :TDBMSUNION, 0,
+                      :TDBMSISECT, 1,
+                      :TDBMSDIFF,  2
+      
       
       def_core_database_consts_and_funcs
       
@@ -80,6 +87,16 @@ module OklahomaMixer
       func :name    => :setindex,
            :args    => [:pointer, :string, INDEXES],
            :returns => :bool
+
+      call :name    => :TDBQRYPROC,
+           :args    => [:pointer, :int, :pointer, :pointer],
+           :returns => :int
+      func :name    => :qryproc,
+           :args    => [:pointer, :TDBQRYPROC, :pointer],
+           :returns => :bool
+      func :name    => :metasearch,
+           :args    => [:pointer, :int, SEARCHES],
+           :returns => :pointer
     end
   end
 end

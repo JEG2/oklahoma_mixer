@@ -12,6 +12,8 @@ module OklahomaMixer
       func :name    => :get,
            :args    => [:pointer, :pointer, :int, :pointer],
            :returns => :pointer
+      func :name    => :clear,
+           :args    => :pointer
 
       func :name    => :iterinit,
            :args    => :pointer

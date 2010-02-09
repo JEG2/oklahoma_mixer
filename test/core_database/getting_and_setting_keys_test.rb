@@ -99,8 +99,27 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
       warning = capture_stderr do
         assert_equal(:value, db.store(:key, :value, :async))  # normal store
       end
-      assert(!warning.empty?, "A warning was not issued for an unsupported mode")
+      assert( !warning.empty?,
+              "A warning was not issued for an unsupported mode" )
       assert_equal("value", db[:key])
+    end
+    
+    fdb do |db|
+      warning = capture_stderr do
+        assert_equal(:value, db.store(1, :value, :async))  # normal store
+      end
+      assert( !warning.empty?,
+              "A warning was not issued for an unsupported mode" )
+      assert_equal("value", db[1])
+    end
+    
+    tdb do |db|
+      warning = capture_stderr do
+        assert_equal({ }, db.store(:key, { }, :async))  # normal store
+      end
+      assert( !warning.empty?,
+              "A warning was not issued for an unsupported mode" )
+      assert_equal({ }, db[:key])
     end
   end
   

@@ -20,6 +20,19 @@ module OklahomaMixer
       end
     end
     
+    def to_hash
+      hash = { }
+      each do |key, value|
+        hash[yield(key)] = yield(value)
+      end
+      hash
+    end
+    
+    def replace(pairs, &cast)
+      C.clear(@pointer)
+      update(pairs, &cast)
+    end
+    
     def free
       C.del(@pointer)
     end
