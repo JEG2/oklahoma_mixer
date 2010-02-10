@@ -3,8 +3,14 @@
 The following is a list of planned expansions for Oklahoma Mixer in the order I
 intend to address them.
 
-1. Add support for Tokyo Tyrant
-2. Ensure Ruby 1.9 compatibility
-3. Write API documentation
-4. Include some higher level abstractions like mixed tables, queues, and shards
-5. Add support for Tokyo Dystopia
+1. Resolve minor issues
+  * Handle errors from all()
+  * Support a read only-version of all() without a block
+  * Make all yield() like Hash#each (a key-value tuple)
+  * Speed up counts (fetch keys only to prevent HashMap conversion)
+  * Push :select down into all() call to speed up paginate()
+2. Include some higher level abstractions like mixed tables, queues, and shards
+3. Add support for Tokyo Tyrant
+4. Ensure Ruby 1.9 compatibility
+5. Write API documentation
+6. Add support for Tokyo Dystopia
