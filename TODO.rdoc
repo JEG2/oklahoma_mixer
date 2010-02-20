@@ -4,7 +4,6 @@ The following is a list of planned expansions for Oklahoma Mixer in the order I
 intend to address them.
 
 1. Resolve minor issues
-  * Handle errors from all()
   * Support a read only-version of all() without a block
   * Make all() yield() like Hash#each (a key-value tuple)
   * Speed up counts (fetch keys only to prevent HashMap conversion)

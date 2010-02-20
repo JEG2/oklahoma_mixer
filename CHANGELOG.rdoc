@@ -5,6 +5,7 @@ Below is a complete listing of changes for each revision of Oklahoma Mixer.
 == 0.4.0
 
 * Added the read_only?() method
+* Added error handling for table queries
 
 == 0.3.0
 

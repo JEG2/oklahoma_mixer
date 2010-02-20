@@ -166,7 +166,11 @@ module OklahomaMixer
             0
           }
         end
-        lib.qryproc(q.pointer, callback, nil)
+        unless lib.qryproc(q.pointer, callback, nil)
+          error_code    = lib.ecode(@db)
+          error_message = lib.errmsg(error_code)
+          fail Error::QueryError, "#{error_message} (error code #{error_code})"
+        end
         results
       end
     end
