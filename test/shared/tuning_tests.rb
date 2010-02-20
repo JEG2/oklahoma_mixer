@@ -66,6 +66,15 @@ module TuningTests
             "A warning was not issued for an option mode with a mode argument" )
   end
   
+  def test_r_mode_marks_a_database_as_read_only
+    db do |wc|  # default mode:  wc
+      assert(!wc.read_only?, "A write/create database was marked read only")
+    end
+    db("r") do |r|
+      assert(r.read_only?, "A read only was not marked as such")
+    end
+  end
+  
   def test_an_unknown_mode_triggers_a_warning
     warning = capture_stderr do
       db("wcu") do

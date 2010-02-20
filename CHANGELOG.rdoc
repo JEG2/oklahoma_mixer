@@ -2,6 +2,10 @@
 
 Below is a complete listing of changes for each revision of Oklahoma Mixer.
 
+== 0.4.0
+
+* Added the read_only?() method
+
 == 0.3.0
 
 * Added the empty?() method
