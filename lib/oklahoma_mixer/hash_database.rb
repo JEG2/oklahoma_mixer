@@ -40,8 +40,7 @@ module OklahomaMixer
       
       warn "mode option supersedes mode argument" if mode and options[:mode]
       mode_enum  = cast_to_enum_int(options.fetch(:mode, mode || "wc"), :mode)
-      mode_name  = "#{self.class.to_s[/([HBFT])\w+\z/, 1]}DB#{MODES["r"]}"
-      @read_only = (mode_enum & lib::MODES[mode_name.to_sym]).nonzero?
+      @read_only = (mode_enum & cast_to_enum_int("r", :mode)).nonzero?
       try(:open, path, mode_enum)
     rescue Exception
       close if defined?(@db) and @db
