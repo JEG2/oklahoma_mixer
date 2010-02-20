@@ -6,7 +6,7 @@ intend to address them.
 1. Resolve minor issues
   * Handle errors from all()
   * Support a read only-version of all() without a block
-  * Make all yield() like Hash#each (a key-value tuple)
+  * Make all() yield() like Hash#each (a key-value tuple)
   * Speed up counts (fetch keys only to prevent HashMap conversion)
   * Push :select down into all() call to speed up paginate()
 2. Include some higher level abstractions like mixed tables, queues, and shards
