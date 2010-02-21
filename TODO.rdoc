@@ -4,7 +4,6 @@ The following is a list of planned expansions for Oklahoma Mixer in the order I
 intend to address them.
 
 1. Resolve minor issues
-  * Speed up counts (fetch keys only to prevent HashMap conversion)
   * Push :select down into all() call to speed up paginate()
 2. Include some higher level abstractions like mixed tables, queues, and shards
 3. Add support for Tokyo Tyrant

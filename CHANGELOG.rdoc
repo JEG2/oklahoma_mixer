@@ -9,6 +9,7 @@ Below is a complete listing of changes for each revision of Oklahoma Mixer.
 * Added support for Table Databases queries on read only databases
 * Added support for iteration blocks to Table Databases searches
 * Modified Table Databases blocks to yield tuples consistent with the iterators
+* Improved count performance by removing unneeded document conversion
 
 == 0.3.0
 

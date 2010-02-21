@@ -164,7 +164,7 @@ module OklahomaMixer
     
     def count(options = { })
       count = 0
-      all(options) { count += 1 }
+      all(options.merge(:select => :keys)) { count += 1 }
       count
     end
     
