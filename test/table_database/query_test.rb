@@ -114,6 +114,16 @@ class TestQuery < Test::Unit::TestCase
                   results.sort_by { |doc| doc.size } )
   end
   
+  def test_all_can_pass_key_in_document_to_a_passed_block_and_return_self
+    load_simple_data
+    results = [ ]
+    assert_equal(@db, @db.all(:return => :aoh) { |kv| results << kv })
+    assert_equal( [ {:primary_key  => "pk2"},
+                    { :primary_key => "pk1",
+                      "a" => "1", "b" => "2", "c" => "3" } ],
+                  results.sort_by { |doc| doc.size } )
+  end
+  
   def test_all_with_a_block_does_not_modify_records_by_default
     load_simple_data
     assert_equal(@db,                                  @db.all { })
@@ -157,6 +167,49 @@ class TestQuery < Test::Unit::TestCase
     assert_match(/\Apk[12]\z/,                  results.first)
     assert_equal(1,                             @db.size)
     assert_match((%w[pk1 pk2] - results).first, @db.keys.first)
+  end
+  
+  def test_all_methods_can_control_what_is_passed_to_the_block
+    load_simple_data
+    [ [{:select => :keys}, "pk1"],
+      [{:select => :docs}, {"a" => "1", "b" => "2", "c" => "3"}],
+      [ {:return => :aoa}, [ "pk1",
+                             {"a" => "1", "b" => "2", "c" => "3"} ] ],
+      [ {:return => :hoh}, [ "pk1",
+                             {"a" => "1", "b" => "2", "c" => "3"} ] ],
+      [ {:return => :aoh}, { :primary_key => "pk1",
+                             "a"          => "1",
+                             "b"          => "2",
+                             "c"          => "3" } ] ].each do |query, results|
+      args = [ ]
+      @db.all(query.merge(:conditions => [:a, :==, 1])) do |kv|
+        args << kv
+      end
+      assert_equal([results], args)
+    end
+  end
+  
+  def test_all_yields_key_value_tuples
+    load_simple_data
+    [ [ {:return => :aoa}, [ "pk1",
+                             {"a" => "1", "b" => "2", "c" => "3"} ] ],
+      [ {:return => :hoh}, [ "pk1",
+                             { "a" => "1",
+                               "b" => "2",
+                               "c" => "3" } ] ] ].each do |query, tuple|
+      yielded = nil
+      @db.all(query.merge(:conditions => [:a, :==, 1])) do |kv|
+        yielded = kv
+      end
+      assert_equal(tuple, yielded)
+      key, value = nil, nil
+      @db.all(query.merge(:conditions => [:a, :==, 1])) do |k, v|
+        key   = k
+        value = v
+      end
+      assert_equal(tuple.first, key)
+      assert_equal(tuple.last,  value)
+    end
   end
   
   def test_all_fails_with_an_error_for_malformed_conditions
@@ -757,6 +810,82 @@ class TestQuery < Test::Unit::TestCase
                                :order      => :first },
                              {:conditions  => [:age, :==, 34]} ) )
   end
+
+  def test_union_can_be_passed_a_block_to_iterate_over_the_results
+    load_condition_data
+    results = [ ]
+    assert_equal( @db,
+                  @db.union( { :select     => :keys,
+                               :conditions => [:first, :ends_with?, "es"],
+                               :order      => :first },
+                             {:conditions  => [:age, :==, 34]} ) { |k|
+                    results << k
+                  } )
+    assert_equal(%w[dana james], results)
+  end
+  
+  def test_union_with_a_block_can_update_records
+    load_condition_data
+    assert_equal( @db,
+                  @db.union( { :conditions => [:first, :ends_with?, "es"],
+                               :order      => :first },
+                             {:conditions  => [:age, :==, 34]} ) { |k, v|
+                    if k == "dana"
+                      v["salutation"] = "Mrs."  # add
+                      v["middle"]     = "AL"    # update
+                      v.delete("age")           # delete
+                      :update
+                    end
+                  } )
+    assert_equal( { "salutation" => "Mrs.",
+                    "first"      => "Dana",
+                    "middle"     => "AL",
+                    "last"       => "Gray" }, @db["dana"] )
+  end
+
+  def test_union_with_a_block_can_delete_records
+    load_condition_data
+    results = [ ]
+    assert_equal( @db,
+                  @db.union( { :select     => :keys,
+                               :conditions => [:first, :ends_with?, "es"],
+                               :order      => :first },
+                             {:conditions  => [:age, :==, 34]} ) { |k|
+                    :delete
+                  } )
+    assert_equal(1,       @db.size)
+    assert_equal(%w[jim], @db.keys)
+  end
+
+  def test_union_with_a_block_can_end_the_query
+    load_condition_data
+    results = [ ]
+    assert_equal( @db,
+                  @db.union( { :select     => :keys,
+                               :conditions => [:first, :ends_with?, "es"],
+                               :order      => :first },
+                             {:conditions  => [:age, :==, 34]} ) { |k|
+                    results << k
+                    :break
+                  } )
+    assert_equal(%w[dana], results)
+  end
+
+  def test_union_with_a_block_can_combine_flags
+    load_condition_data
+    results = [ ]
+    assert_equal( @db,
+                  @db.union( { :select     => :keys,
+                               :conditions => [:first, :ends_with?, "es"],
+                               :order      => :first },
+                             {:conditions  => [:age, :==, 34]} ) { |k|
+                    results << k
+                    %w[delete break]
+                  } )
+    assert_equal(%w[dana], results)
+    assert_nil(@db["dana"])
+    assert_equal(2, @db.size)
+  end
   
   def test_intersection_returns_the_set_intersection_of_multiple_queries
     load_condition_data
@@ -798,6 +927,86 @@ class TestQuery < Test::Unit::TestCase
                                :order      => :first },
                              {:conditions  => [:last, :==, "Gray"]} ) )
   end
+
+  def test_intersection_can_be_passed_a_block_to_iterate_over_the_results
+    load_condition_data
+    results = [ ]
+    assert_equal( @db,
+                  @db.isect( { :select     => :keys,
+                               :return     => :hoh,
+                               :conditions => [:first, :include?, "a"],
+                               :order      => :first },
+                             {:conditions  => [:last, :==, "Gray"]} ) { |k|
+                    results << k
+                  } )
+    assert_equal(%w[dana james], results)
+  end
+  
+  def test_intersection_with_a_block_can_update_records
+    load_condition_data
+    assert_equal( @db,
+                  @db.isect( { :return     => :hoh,
+                               :conditions => [:first, :include?, "a"],
+                               :order      => :first },
+                             {:conditions  => [:last, :==, "Gray"]} ) { |k, v|
+                    if k == "dana"
+                      v["salutation"] = "Mrs."  # add
+                      v["middle"]     = "AL"    # update
+                      v.delete("age")           # delete
+                      :update
+                    end
+                  } )
+    assert_equal( { "salutation" => "Mrs.",
+                    "first"      => "Dana",
+                    "middle"     => "AL",
+                    "last"       => "Gray" }, @db["dana"] )
+  end
+
+  def test_intersection_with_a_block_can_delete_records
+    load_condition_data
+    assert_equal( @db,
+                  @db.isect( { :select     => :keys,
+                               :return     => :hoh,
+                               :conditions => [:first, :include?, "a"],
+                               :order      => :first },
+                             {:conditions  => [:last, :==, "Gray"]} ) { |k|
+                    :delete
+                  } )
+    assert_equal(1,       @db.size)
+    assert_equal(%w[jim], @db.keys)
+  end
+
+  def test_intersection_with_a_block_can_end_the_query
+    load_condition_data
+    results = [ ]
+    assert_equal( @db,
+                  @db.isect( { :select     => :keys,
+                               :return     => :hoh,
+                               :conditions => [:first, :include?, "a"],
+                               :order      => :first },
+                             {:conditions  => [:last, :==, "Gray"]} ) { |k|
+                    results << k
+                    :break
+                  } )
+    assert_equal(%w[dana], results)
+  end
+
+  def test_intersection_with_a_block_can_combine_flags
+    load_condition_data
+    results = [ ]
+    assert_equal( @db,
+                  @db.isect( { :select     => :keys,
+                               :return     => :hoh,
+                               :conditions => [:first, :include?, "a"],
+                               :order      => :first },
+                             {:conditions  => [:last, :==, "Gray"]} ) { |k|
+                    results << k
+                    %w[delete break]
+                  } )
+    assert_equal(%w[dana], results)
+    assert_nil(@db["dana"])
+    assert_equal(2, @db.size)
+  end
   
   def test_difference_returns_the_set_difference_of_multiple_queries
     load_condition_data
@@ -834,6 +1043,145 @@ class TestQuery < Test::Unit::TestCase
                               :conditions => [:last, :==, "Gray"],
                               :order      => :first },
                             {:conditions  => [:first, :==, "Jim"]} ) )
+  end
+  
+  def test_difference_can_be_passed_a_block_to_iterate_over_the_results
+    load_condition_data
+    results = [ ]
+    assert_equal( @db,
+                  @db.diff( { :select     => :keys,
+                              :conditions => [:last, :==, "Gray"],
+                              :order      => :first },
+                            {:conditions  => [:first, :==, "Jim"]} ) { |k|
+                    results << k
+                  } )
+    assert_equal(%w[dana james], results)
+  end
+  
+  def test_difference_with_a_block_can_update_records
+    load_condition_data
+    assert_equal( @db,
+                  @db.diff( { :conditions => [:last, :==, "Gray"],
+                              :order      => :first },
+                            {:conditions  => [:first, :==, "Jim"]} ) { |k, v|
+                    if k == "dana"
+                      v["salutation"] = "Mrs."  # add
+                      v["middle"]     = "AL"    # update
+                      v.delete("age")           # delete
+                      :update
+                    end
+                  } )
+    assert_equal( { "salutation" => "Mrs.",
+                    "first"      => "Dana",
+                    "middle"     => "AL",
+                    "last"       => "Gray" }, @db["dana"] )
+  end
+  
+  def test_difference_with_a_block_can_delete_records
+    load_condition_data
+    assert_equal( @db,
+                  @db.diff( { :select     => :keys,
+                              :conditions => [:last, :==, "Gray"],
+                              :order      => :first },
+                            {:conditions  => [:first, :==, "Jim"]} ) { |k|
+                    :delete
+                  } )
+    assert_equal(1,       @db.size)
+    assert_equal(%w[jim], @db.keys)
+  end
+  
+  def test_difference_with_a_block_can_end_the_query
+    load_condition_data
+    results = [ ]
+    assert_equal( @db,
+                  @db.diff( { :select     => :keys,
+                              :conditions => [:last, :==, "Gray"],
+                              :order      => :first },
+                            {:conditions  => [:first, :==, "Jim"]} ) { |k|
+                    results << k
+                    :break
+                  } )
+    assert_equal(%w[dana], results)
+  end
+  
+  def test_difference_with_a_block_can_combine_flags
+    load_condition_data
+    results = [ ]
+    assert_equal( @db,
+                  @db.diff( { :select     => :keys,
+                              :conditions => [:last, :==, "Gray"],
+                              :order      => :first },
+                            {:conditions  => [:first, :==, "Jim"]} ) { |k|
+                    results << k
+                    %w[delete break]
+                  } )
+    assert_equal(%w[dana], results)
+    assert_nil(@db["dana"])
+    assert_equal(2, @db.size)
+  end
+  
+  def test_search_methods_can_control_what_is_passed_to_the_block
+    load_condition_data
+    [ [{:select => :keys},  "dana"],
+      [ {:select => :docs}, { "first" => "Dana",
+                              "middle" => "Ann Leslie",
+                              "last"   => "Gray",
+                              "age"    => "34" } ],
+      [ {:return => :aoa},  [ "dana",
+                              { "first" => "Dana",
+                                "middle" => "Ann Leslie",
+                                "last"   => "Gray",
+                                "age"    => "34" } ] ],
+      [ {:return => :hoh},  [ "dana",
+                              { "first" => "Dana",
+                                "middle" => "Ann Leslie",
+                                "last"   => "Gray",
+                                "age"    => "34" } ] ],
+      [ {:return => :aoh},  { :primary_key => "dana",
+                              "first" => "Dana",
+                              "middle" => "Ann Leslie",
+                              "last"   => "Gray",
+                              "age"    => "34" } ] ].each do |query, results|
+      %w[union intersection difference].each do |search|
+        args = [ ]
+        @db.send( search,
+                  query.merge(:conditions => [:first, :==, "Dana"]) ) do |kv|
+          args << kv
+        end
+        assert_equal([results], args)
+      end
+    end
+  end
+  
+  def test_search_methods_yields_key_value_tuples
+    load_condition_data
+    [ [ {:return => :aoa},  [ "dana",
+                              { "first" => "Dana",
+                                "middle" => "Ann Leslie",
+                                "last"   => "Gray",
+                                "age"    => "34" } ] ],
+      [ {:return => :hoh},  [ "dana",
+                              { "first" => "Dana",
+                                "middle" => "Ann Leslie",
+                                "last"   => "Gray",
+                                "age"    => "34" } ] ] ].each do |query, tuple|
+      %w[union intersection difference].each do |search|
+        yielded = nil
+        @db.send( search,
+                  query.merge(:conditions => [:first, :==, "Dana"]) ) do |kv|
+          yielded = kv
+        end
+        assert_equal(tuple, yielded)
+        key, value = nil, nil
+        @db.send( search,
+                  query.merge(:conditions => [:first, :==, "Dana"]) ) do |k, v|
+          key   = k
+          value = v
+        end
+        assert_equal(tuple.first, key)
+        assert_equal(tuple.last,  value)
+      end
+    end
   end
   
   private

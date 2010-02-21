@@ -114,7 +114,7 @@ module OklahomaMixer
     def all(options = { }, &iterator)
       query(options) do |q|
         mode = results_mode(options)
-        if block_given?
+        if not iterator.nil? and not read_only?
           results  = self
           callback = lambda { |key_pointer, key_size, doc_map, _|
             if mode != :docs
@@ -125,9 +125,10 @@ module OklahomaMixer
               doc = map.to_hash { |string| cast_to_encoded_string(string) }
             end
             flags = case mode
-                    when :keys then yield(key)
-                    when :docs then yield(doc)
-                    else            yield(key, doc)
+                    when :keys then iterator[key]
+                    when :docs then iterator[doc]
+                    when :aoh  then iterator[doc.merge!(:primary_key => key)]
+                    else            iterator[[key, doc]]
                     end
             Array(flags).inject(0) { |returned_flags, flag|
               returned_flags | case flag.to_s
@@ -144,34 +145,16 @@ module OklahomaMixer
                                end
             }
           }
+          unless lib.qryproc(q.pointer, callback, nil)
+            error_code    = lib.ecode(@db)
+            error_message = lib.errmsg(error_code)
+            fail Error::QueryError,
+                 "#{error_message} (error code #{error_code})"
+          end
+          results
         else
-          results  = mode != :hoh ? [ ] : { }
-          callback = lambda { |key_pointer, key_size, doc_map, _|
-            if mode == :docs
-              results << cast_value_out(doc_map, :no_free)
-            else
-              key = cast_key_out(key_pointer.get_bytes(0, key_size))
-              case mode
-              when :keys
-                results << key
-              when :hoh
-                results[key] = cast_value_out(doc_map, :no_free)
-              when :aoh
-                results << cast_value_out(doc_map, :no_free).
-                           merge(:primary_key => key)
-              else
-                results << [key, cast_value_out(doc_map, :no_free)]
-              end
-            end
-            0
-          }
+          query_results(lib.qrysearch(q.pointer), mode, &iterator)
         end
-        unless lib.qryproc(q.pointer, callback, nil)
-          error_code    = lib.ecode(@db)
-          error_message = lib.errmsg(error_code)
-          fail Error::QueryError, "#{error_message} (error code #{error_code})"
-        end
-        results
       end
     end
     
@@ -196,7 +179,8 @@ module OklahomaMixer
       fail Error::QueryError, ":per_page must be >= 1" if results.per_page < 1
       results.total_entries = 0
       all( options.merge( :select => :keys_and_docs,
-                          :limit  => nil ) ) { |key, value|
+                          :return => :aoa,
+                          :limit  => nil ) ) do |key, value|
         if results.total_entries >= results.offset and
            results.size          <  results.per_page
           case mode
@@ -213,21 +197,21 @@ module OklahomaMixer
           end
         end
         results.total_entries += 1
-      }
+      end
       results
     end
     
-    def union(q, *queries)
-      search([q] + queries, lib::SEARCHES[:TDBMSUNION])
+    def union(q, *queries, &iterator)
+      search([q] + queries, lib::SEARCHES[:TDBMSUNION], &iterator)
     end
     
-    def intersection(q, *queries)
-      search([q] + queries, lib::SEARCHES[:TDBMSISECT])
+    def intersection(q, *queries, &iterator)
+      search([q] + queries, lib::SEARCHES[:TDBMSISECT], &iterator)
     end
     alias_method :isect, :intersection
     
-    def difference(q, *queries)
-      search([q] + queries, lib::SEARCHES[:TDBMSDIFF])
+    def difference(q, *queries, &iterator)
+      search([q] + queries, lib::SEARCHES[:TDBMSDIFF], &iterator)
     end
     alias_method :diff, :difference
     
@@ -365,34 +349,61 @@ module OklahomaMixer
       end
     end
     
-    def search(queries, operation)
-      mode = results_mode(queries.first)
-      qs   = queries.map { |q| query(q) }
-      keys = ArrayList.new( Utilities.temp_pointer(qs.size) do |pointer|
-        pointer.write_array_of_pointer(qs.map { |q| q.pointer })
-        lib.metasearch(pointer, qs.size, operation)
-      end )
-      case mode
-      when :keys
-        keys.map { |key| cast_key_out(key) }
-      when :docs
-        keys.map { |key| self[cast_key_out(key)] }
-      when :hoh
-        results = { }
-        while key = keys.shift { |k| cast_key_out(k) }
-          results[key] = self[key]
+    def query_results(results, mode, &iterator)
+      keys = ArrayList.new(results)
+      if iterator.nil?
+        results  = mode == :hoh ? { } : [ ]
+        iterator = lambda do |key_and_value|
+          if mode == :hoh
+            results[key_and_value.first] = key_and_value.last
+          else
+            results << key_and_value
+          end
         end
-        results
-      when :aoh
-        keys.map { |key|
-          key = cast_key_out(key)
-          self[key].merge(:primary_key => key)
-        }
       else
-        keys.map { |key|
-          key = cast_key_out(key)
-          [key, self[key]]
-        }
+        results = self
+      end
+      keys.each do |key|
+        flags = Array( case mode
+        when :keys
+          iterator[cast_key_out(key)]
+        when :docs
+          iterator[self[cast_key_out(key)]]
+        when :aoh
+          k = cast_key_out(key)
+          iterator[self[k].merge!(:primary_key => k)]
+        else
+          k = cast_key_out(key)
+          v = self[k]
+          iterator[[k, v]]
+        end ).map { |flag| flag.to_s }
+        if flags.include? "delete"
+          if read_only?
+            warn "attempted delete from a read only query"
+          else
+            delete(key)
+          end
+        elsif v and flags.include? "update"
+          if read_only?
+            warn "attempted update from a read only query"
+          else
+            self[k] = v
+          end
+        end
+        break if flags.include? "break"
+      end
+      results
+    ensure
+      keys.free if keys
+    end
+    
+    def search(queries, operation, &iterator)
+      qs = queries.map { |q| query(q) }
+      Utilities.temp_pointer(qs.size) do |pointer|
+        pointer.write_array_of_pointer(qs.map { |q| q.pointer })
+        query_results( lib.metasearch(pointer, qs.size, operation),
+                       results_mode(queries.first),
+                       &iterator)
       end
     ensure
       if qs
@@ -400,7 +411,6 @@ module OklahomaMixer
           q.free
         end
       end
-      keys.free if keys
     end
   end
 end

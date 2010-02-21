@@ -90,6 +90,9 @@ module OklahomaMixer
            :args    => [:pointer, :string, INDEXES],
            :returns => :bool
 
+      func :name    => :qrysearch,
+           :args    => :pointer,
+           :returns => :pointer
       call :name    => :TDBQRYPROC,
            :args    => [:pointer, :int, :pointer, :pointer],
            :returns => :int

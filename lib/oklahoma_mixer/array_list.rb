@@ -11,17 +11,12 @@ module OklahomaMixer
     
     attr_reader :pointer
     
-    def shift
-      value = C.read_from_func(:shift, @pointer)
-      block_given? ? yield(value) : value
-    end
+    include Enumerable
     
-    def map
-      values = [ ]
-      while value = shift
-        values << yield(value)
+    def each
+      (0...C.num(pointer)).each do |i|
+        yield C.read_from_func(:val, :no_free, @pointer, i)
       end
-      values
     end
     
     def push(*values)

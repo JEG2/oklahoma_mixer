@@ -12,10 +12,14 @@ module OklahomaMixer
            :returns => :pointer
       func :name    => :del,
            :args    => :pointer
-      
-      func :name    => :shift,
-           :args    => [:pointer, :pointer],
+
+      func :name    => :num,
+           :args    => :pointer,
+           :returns => :int
+      func :name    => :val,
+           :args    => [:pointer, :int, :pointer],
            :returns => :pointer
+      
       func :name    => :push,
            :args    => [:pointer, :pointer, :int]
     end
