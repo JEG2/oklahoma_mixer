@@ -178,22 +178,13 @@ module OklahomaMixer
       results.per_page = (options[:per_page] || 30).to_i
       fail Error::QueryError, ":per_page must be >= 1" if results.per_page < 1
       results.total_entries = 0
-      all( options.merge( :select => :keys_and_docs,
-                          :return => :aoa,
-                          :limit  => nil ) ) do |key, value|
+      all(options.merge(:limit => nil)) do |kv|
         if results.total_entries >= results.offset and
            results.size          <  results.per_page
-          case mode
-          when :keys
-            results << key
-          when :docs
-            results << value
-          when :hoh
-            results[key] = value
-          when :aoh
-            results << value.merge(:primary_key => key)
+          if mode == :hoh
+            results[kv.first] = kv.last
           else
-            results << [key, value]
+            results << kv
           end
         end
         results.total_entries += 1
