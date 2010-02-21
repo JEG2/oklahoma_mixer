@@ -1,5 +1,5 @@
 module OklahomaMixer
-  VERSION = "0.3.0"
+  VERSION = "0.4.0"
   
   autoload :HashDatabase,        "oklahoma_mixer/hash_database"
   autoload :BTreeDatabase,       "oklahoma_mixer/b_tree_database"
