@@ -372,7 +372,7 @@ module OklahomaMixer
     
     def cast_to_bytes_and_length(object)
       bytes = object.to_s
-      [bytes, bytes.length]
+      [bytes, bytes.bytesize]
     end
     alias_method :cast_key_in,   :cast_to_bytes_and_length
     alias_method :cast_value_in, :cast_to_bytes_and_length
