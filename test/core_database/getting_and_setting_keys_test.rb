@@ -1,3 +1,4 @@
+# Encoding: UTF-8
 require "test_helper"
 require "shared/storage_tests"
 
@@ -16,6 +17,14 @@ class TestGettingAndSettingKeys < Test::Unit::TestCase
   def test_a_key_value_pair_can_be_stored_and_fetched_from_the_database
     assert_equal("value", @db.store("key", "value"))
     assert_equal("value", @db.fetch("key"))  # later
+  end
+  
+  def test_a_multibyte_key_is_saved_in_full_on_19
+    # This only applies to Ruby 1.9
+    if '1.9'.respond_to? :encoding
+      assert_equal("value", @db.store("あいうえお", "value"))
+      assert_equal("あいうえお", @db.keys[0].force_encoding('UTF-8'))
+    end
   end
   
   def test_both_keys_and_values_are_converted_to_strings
